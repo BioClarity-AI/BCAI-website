@@ -2,12 +2,6 @@
 import PageShell from '../layouts/PageShell.astro';
 import Emergence from '../components/Emergence.astro';
 
-const stats = [
-  { value: '8', label: 'Scales resolved' },
-  { value: '1', label: 'Validation layer' },
-  { value: '∞', label: 'Emergent states' },
-];
-
 const title = 'BioClarity AI — turn AI adoption into scientific value';
 const description =
   'BioClarity gives pharma and biotech leaders a vendor-agnostic way to identify where AI can create real impact, validate it against their own data and workflows, and tailor proven capabilities to their portfolio.';
@@ -28,17 +22,6 @@ const description =
       real impact, validate it against their own data and workflows, and tailor proven
       capabilities to their portfolio—so AI investment is grounded in evidence, not hype.
     </p>
-
-    <dl class="stats">
-      {
-        stats.map(({ value, label }) => (
-          <div class="stat">
-            <dt class="stat-value">{value}</dt>
-            <dd class="stat-label">{label}</dd>
-          </div>
-        ))
-      }
-    </dl>
   </Fragment>
 
   <Fragment slot="stage">
@@ -79,30 +62,7 @@ const description =
     line-height: 1.55;
     color: var(--color-neutral-800);
     max-width: 46ch;
-    margin: 0 0 32px;
-  }
-
-  .stats {
-    border-top: 2px solid var(--color-divider);
-    padding-top: 16px;
     margin: 0;
-    display: flex;
-    gap: 32px;
-  }
-
-  .stat-value {
-    font-family: var(--font-heading);
-    font-weight: 800;
-    font-size: 22px;
-    line-height: 1;
-  }
-
-  .stat-label {
-    margin: 4px 0 0;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-neutral-600);
   }
 
   @media (prefers-reduced-motion: reduce) {

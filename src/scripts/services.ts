@@ -104,11 +104,16 @@ function adoptionScene(): Scene {
       const availH = s.y1 - s.y0;
       const yLabel = 'AI USAGE';
       const yw = s.mText(yLabel, xfs, 800, '0.14em');
+      const yArrow = Math.max(24, Math.min(64, availH - yw - 30));
+      // Lift the label up the axis: sitting in the corner it reads as a
+      // continuation of the x-axis label below it. Clamped against the room
+      // the text and its arrow need, so it cannot run off a short panel.
+      const yLift = Math.min(56, Math.max(0, availH - yw - yArrow - 8));
       ctx.save();
-      ctx.translate(s.x0 - 14, s.y1 - 8);
+      ctx.translate(s.x0 - 14, s.y1 - 8 - yLift);
       ctx.rotate(-Math.PI / 2);
       s.txt(yLabel, 0, 3, xfs, s.ink, 800, '0.14em');
-      axisArrow(yw + 10, -1, Math.max(24, Math.min(64, availH - yw - 30)));
+      axisArrow(yw + 10, -1, yArrow);
       ctx.restore();
 
       ctx.save();

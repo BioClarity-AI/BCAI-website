@@ -98,7 +98,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
       links.map(({ href, label, menu }) =>
         menu ? (
           <div class="menu">
-            <a href={href} aria-current={path === href ? 'page' : undefined}>
+            <a class="nav-link" href={href} aria-current={path === href ? 'page' : undefined}>
               {label}
             </a>
             <div class="menu-panel">
@@ -117,23 +117,68 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
             </div>
           </div>
         ) : (
-          <a href={href} aria-current={path === href ? 'page' : undefined}>
+          <a class="nav-link" href={href} aria-current={path === href ? 'page' : undefined}>
             {label}
           </a>
         ),
       )
     }
     <a class="btn btn-primary nav-cta" href="/request-access">Request access</a>
+    <span class="nav-break" aria-hidden="true"></span>
   </nav>
 </header>
 
 <script>
+  const menus = [...document.querySelectorAll<HTMLElement>('.menu')];
+
+  /** Shut every menu: the tap-opened state and the picked-while-hovered one. */
+  const closeAll = (except?: HTMLElement) => {
+    for (const menu of menus) {
+      if (menu === except) continue;
+      menu.classList.remove('is-open');
+    }
+  };
+
+  for (const menu of menus) {
+    const label = menu.querySelector<HTMLAnchorElement>('.nav-link');
+
+    // A touch screen has no hover, so the menu would never open. The first tap
+    // opens it instead of following the link; a second tap on the same label
+    // goes through to the page. Pointer devices keep the hover behaviour and
+    // never reach this.
+    label?.addEventListener('click', (event) => {
+      if (!window.matchMedia('(hover: none)').matches) return;
+      if (menu.classList.contains('is-open')) return;
+      event.preventDefault();
+      closeAll();
+      menu.classList.remove('is-closed');
+      menu.classList.add('is-open');
+    });
+
+    // Moving off the menu resets both states, so hover works normally again.
+    menu.addEventListener('mouseleave', () => {
+      menu.classList.remove('is-closed', 'is-open');
+    });
+  }
+
+  // A tap anywhere else dismisses an open menu.
+  document.addEventListener('click', (event) => {
+    if (!(event.target as Element | null)?.closest?.('.menu')) closeAll();
+  });
+
   /**
    * A menu pick for the page you are already on: keep the page, hand the
    * selection to its panel. Anywhere else the link navigates normally.
    */
   document.querySelectorAll<HTMLAnchorElement>('[data-pick]').forEach((link) => {
     link.addEventListener('click', (event) => {
+      // Close the menu either way — on a same-page pick nothing else would,
+      // and on a navigation it should not sit open through the page fade.
+      const menu = link.closest<HTMLElement>('.menu');
+      menu?.classList.remove('is-open');
+      menu?.classList.add('is-closed');
+      (document.activeElement as HTMLElement | null)?.blur?.();
+
       const { pick, pickHash, pickIndex, pickPath } = link.dataset;
       if (!pick || !pickHash || !pickIndex || !pickPath) return;
 
@@ -148,14 +193,13 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
         /* a blocked history write must not stop the selection */
       }
       window.dispatchEvent(new CustomEvent(pick, { detail: index }));
-      // Drop the hover state so the menu closes behind the pick.
-      (document.activeElement as HTMLElement | null)?.blur?.();
     });
   });
 </script>
 
 <style>
   .nav-bar {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -199,7 +243,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     gap: clamp(12px, 2.2vw, 28px);
   }
 
-  .nav-links a:not(.btn):not(.menu-panel a) {
+  /* Scoped to .nav-link, not to "every a in the nav". A :not() chain broad
+     enough to cover both would also outrank .menu-panel a:hover on
+     specificity, which paints the hovered menu item accent-on-accent. */
+  .nav-link {
     font-size: clamp(13px, 1.25vw, 15px);
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -208,8 +255,8 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     white-space: nowrap;
   }
 
-  .nav-links a:not(.btn):hover,
-  .nav-links a[aria-current='page'] {
+  .nav-link:hover,
+  .nav-link[aria-current='page'] {
     color: var(--color-accent);
   }
 
@@ -225,7 +272,8 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     position: absolute;
     top: 100%;
     left: -18px;
-    width: 336px;
+    /* Never wider than the window, or the panel hangs off a narrow one. */
+    width: min(336px, calc(100vw - 40px));
     display: none;
     background: var(--color-bg);
     border: 2px solid var(--color-divider);
@@ -234,11 +282,19 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     box-shadow: var(--shadow-md);
   }
 
-  /* focus-within keeps the menu reachable by keyboard, which the hover-only
-     source could not be. */
+  /* focus-within keeps the menu reachable by keyboard, and .is-open by tap on a
+     touch screen, neither of which the hover-only source could do. */
   .menu:hover .menu-panel,
-  .menu:focus-within .menu-panel {
+  .menu:focus-within .menu-panel,
+  .menu.is-open .menu-panel {
     display: block;
+  }
+
+  /* Set when an item is picked, so the menu closes under a pointer that is
+     still resting on it. Cleared on mouseleave. Must follow the rules above:
+     same specificity, so it wins on source order. */
+  .menu.is-closed .menu-panel {
+    display: none;
   }
 
   .menu-panel a {
@@ -281,15 +337,82 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     white-space: nowrap;
   }
 
-  @media (max-width: 700px) {
+  /* Only exists to end the first row once the nav wraps; see the query below. */
+  .nav-break {
+    display: none;
+  }
+
+  /* Below this the nav becomes two rows — brand, then the links — rather than
+     one crowded one. It must not drop the links instead: Services, Science and
+     Company are the site's content, and hiding them here strands a phone on
+     whichever page it landed on. */
+  @media (max-width: 760px) {
     .nav-bar {
+      flex-wrap: wrap;
+      justify-content: flex-start;
       padding: 14px 20px;
+      gap: 12px 18px;
     }
-    .nav-links a:not(.btn):not(.menu-panel a) {
-      display: none;
+
+    /* display: contents dissolves the nav's own box so the brand, the links and
+       the button all become items of the same flex row and can be ordered
+       across two lines: brand and button first, links beneath. The <nav>
+       landmark itself is unaffected. */
+    .nav-links {
+      display: contents;
     }
+
+    /* Flex breaks lines before it shrinks items, so an un-capped brand would
+       keep the tag beside the name and push the button onto a row of its own.
+       Capping it to the room the button leaves makes the tag wrap under the
+       name instead — it stays visible, and the nav stays two rows. */
+    .brand {
+      order: 1;
+      flex-wrap: wrap;
+      row-gap: 2px;
+      max-width: calc(100% - 140px);
+    }
+
+    .nav-cta {
+      order: 2;
+      margin-left: auto;
+      padding: 8px 12px;
+      font-size: 11px;
+    }
+
+    /* A full-width, zero-height item: flexbox has no "break here", so this
+       closes the brand row and drops the links onto their own. */
+    .nav-break {
+      display: block;
+      order: 3;
+      flex-basis: 100%;
+      height: 0;
+    }
+
+    .menu,
+    .nav-link {
+      order: 4;
+      font-size: 12px;
+    }
+
+    /* Anchored to the nav bar rather than to the label: the labels sit on the
+       second row, and a panel hung off the right-hand one would run past the
+       edge of a phone. Dropping it under the whole bar also gives it the full
+       width to use. */
     .menu {
-      display: none;
+      position: static;
+      /* The panel hangs off the bottom of the bar, so the bar's own bottom
+         padding sits between the label and it. Without this the pointer
+         crosses un-hovered ground on the way down and the menu shuts before
+         it can be reached. The negative margin keeps the row's height. */
+      padding: 0 0 16px;
+      margin: 0 0 -16px;
+    }
+
+    .menu-panel {
+      left: 20px;
+      right: 20px;
+      width: auto;
     }
   }
 </style>

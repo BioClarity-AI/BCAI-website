@@ -80,6 +80,8 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
     const boxW = tight ? 44 : 64;
     const boxH = tight ? 34 : 46;
     const es = tight ? 15 : 20;
+    /* The rule the whole scene stands on. Everything below it hangs off this. */
+    const baselineY = midY + boxH / 2 + 6;
 
     s.txt('YOUR EMAIL — LIVE SIMULATION', x0, tight ? 54 : 64, 11, s.dim, 800, '0.18em');
 
@@ -121,8 +123,8 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
       for (const d of [-1, 1]) ctx.fillRect(boxX + d * 10 - 2.5 + ex, eyeY - 2.5, 5, 5);
     }
     ctx.restore();
-    s.ctext('US', boxX, midY + boxH / 2 + 24, 10, s.ink, 800, '0.18em');
-    s.txt('YOU', x0, midY + boxH / 2 + 24, 10, s.dim, 800, '0.18em');
+    s.ctext('US', boxX, baselineY + 18, 10, s.ink, 800, '0.18em');
+    s.txt('YOU', x0, baselineY + 18, 10, s.dim, 800, '0.18em');
 
     // The envelope's path.
     let caption = 'IT TRAVELS AT THE SPEED OF SINCERITY';
@@ -135,7 +137,10 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
       const done = (t - P.fly1) / 0.5;
       CHECKS.forEach((c, i) => {
         if (i > k) return;
-        const y = midY + 34 + i * 16;
+        // Hang the list off the baseline, not the midline: at midY + 34 the
+        // first row's glyphs straddled the rule. The extra drop clears the
+        // YOU / US captions, which sit on their own row just under it.
+        const y = baselineY + 34 + i * 16;
         s.txt(c, gateX + 12, y, 9, s.dim, 800, '0.12em');
         if (done > i + 0.7 || i < k) {
           const answer = i === 2 ? 'NO' : 'YES';
@@ -224,9 +229,9 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
     }
 
     // Baseline + caption.
-    s.line(x0, midY + boxH / 2 + 6, x1, midY + boxH / 2 + 6, s.ink, 2);
+    s.line(x0, baselineY, x1, baselineY, s.ink, 2);
     const capFs = s.mText(caption, 12, 800, '0.14em') < x1 - x0 ? 12 : 10;
-    s.txt(caption, x0, s.h - (tight ? 44 : 56), capFs, s.ink, 800, '0.14em');
+    s.txt(caption, x0, s.h - (tight ? 94 : 106), capFs, s.ink, 800, '0.14em');
   });
 
   return {
