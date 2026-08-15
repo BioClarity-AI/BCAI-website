@@ -440,7 +440,10 @@ export function initEmergence(root: HTMLElement): EmergenceHandle {
   const nav = (d: number) => {
     if (ov) {
       // Reversing the move in flight: play it backwards from where it is.
-      if ((((ov.to - d) % n) + n) % n === ov.from) {
+      // The move under way went from -> to, so the press that undoes it is the
+      // one whose step lands back on from. Testing `to - d` instead matches the
+      // press that CONTINUES in the same direction, which is the opposite case.
+      if ((((ov.to + d) % n) + n) % n === ov.from) {
         ov = { from: ov.to, to: ov.from, p: 1 - ov.p };
         return;
       }
