@@ -1,0 +1,183 @@
+---
+import PageShell from '../layouts/PageShell.astro';
+import ScenePanel from '../components/ScenePanel.astro';
+
+const title = 'Services — BioClarity AI';
+const description =
+  'Four services scoped to your portfolio: AI adoption strategy, validation and benchmarking, AI and data products, and portfolio intelligence. Vendor agnostic, built around your science.';
+---
+
+<PageShell title={title} description={description} wide>
+  <Fragment slot="copy">
+    <p class="eyebrow">
+      <span class="pulse" aria-hidden="true"></span>
+      How we engage
+    </p>
+
+    <h1>Built Around Your Science</h1>
+
+    <p class="lede">
+      We work with R&D organizations to find where AI can create real impact, validate it
+      against their own data and workflows, and tailor proven capabilities to their
+      portfolio. No platform agenda. No preferred vendor. Four services, scoped to what your
+      portfolio needs.
+    </p>
+
+    <section data-svc="1">
+      <h2 data-svc-title="1">AI Adoption Strategy</h2>
+      <p class="claim">
+        Adopt AI where it can change scientific decisions—not simply increase AI usage.
+      </p>
+      <p class="body">Identify where AI can create measurable value.</p>
+      <p class="body">
+        AI is changing not only what R&D teams can do, but how they work, collaborate, and
+        make decisions. We identify where AI can create measurable value, reshape workflows
+        around those opportunities, and manage adoption in a way that fits your culture,
+        operating model, and scientific objectives.
+      </p>
+    </section>
+
+    <section data-svc="2">
+      <h2 data-svc-title="2">Validation &amp; Benchmarking</h2>
+      <p class="claim">
+        AI should earn trust against your data, workflows, and scientific standards.
+      </p>
+      <p class="body">Prove what works for your science.</p>
+    </section>
+
+    <section data-svc="3">
+      <h2 data-svc-title="3">AI &amp; Data Products</h2>
+      <p class="claim">
+        Build around your science and portfolio—not around the limitations of a platform.
+      </p>
+      <p class="body">Build around your data, workflows, and portfolio.</p>
+      <p class="body">
+        Build around your data, workflows, and portfolio—while equipping your internal IT and
+        data teams to become builders, not permanent dependents on external vendors.
+      </p>
+      <blockquote>
+        <p>
+          “I don’t yet know how to engineer a biologic, and it’s too early to bring in a
+          molecular engineer. I’d like to design a biologic for my target and develop it into
+          a proposal for further development. AI would be the perfect business partner for
+          this stage.”
+        </p>
+        <footer>Biologist, customer discovery interview</footer>
+      </blockquote>
+    </section>
+
+    <section data-svc="4" class="last">
+      <h2 data-svc-title="4">Portfolio Intelligence</h2>
+      <p class="claim">Intelligence creates value only when it leads to a better next decision.</p>
+      <p class="body">Turn complex evidence into better R&D decisions.</p>
+    </section>
+  </Fragment>
+
+  <Fragment slot="stage">
+    <ScenePanel kicker="Services — live" initial="AI ADOPTION STRATEGY" noun="service" />
+  </Fragment>
+</PageShell>
+
+<script>
+  import { initServices } from '../scripts/services';
+
+  const stage = document.querySelector<HTMLElement>('[data-page-stage]');
+  if (stage) initServices(stage);
+</script>
+
+<style>
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-neutral-700);
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    background: var(--color-accent);
+    animation: bc-pulse 2.4s ease-in-out infinite;
+  }
+
+  h1 {
+    font-size: clamp(34px, 3.6vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0 0 22px;
+    max-width: 15ch;
+  }
+
+  .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--color-neutral-800);
+    max-width: 46ch;
+    margin: 0 0 28px;
+  }
+
+  section {
+    border-top: 2px solid var(--color-divider);
+    padding: 26px 0 30px;
+  }
+
+  section.last {
+    padding-bottom: 0;
+  }
+
+  h2 {
+    font-size: clamp(20px, 1.9vw, 27px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .claim {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 17px;
+    line-height: 1.35;
+    margin: 12px 0 0;
+    max-width: 42ch;
+  }
+
+  .body {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-neutral-800);
+    margin: 10px 0 0;
+    max-width: 46ch;
+  }
+
+  blockquote {
+    margin: 20px 0 0;
+    padding: 18px 0 0;
+    border-top: 1px dotted var(--color-neutral-500);
+    max-width: 46ch;
+  }
+
+  blockquote p {
+    font-size: 16px;
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  blockquote footer {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-neutral-600);
+    margin-top: 12px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse {
+      animation: none;
+    }
+  }
+</style>

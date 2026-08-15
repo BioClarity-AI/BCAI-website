@@ -1,18 +1,140 @@
 ---
-import Stub from '../layouts/Stub.astro';
+import PageShell from '../layouts/PageShell.astro';
+import ScenePanel from '../components/ScenePanel.astro';
+
+const title = 'Science — BioClarity AI';
+const description =
+  'Does the AI actually learn biology? The measurement layer behind BioClarity AI: explainability and generalizability metrics for agentic systems and frontier models.';
 ---
 
-<Stub
-  title="Science — BioClarity AI"
-  description="The research behind BioClarity AI: emergent behavior in biological and artificial complex systems, and how it is validated."
-  heading="Science"
->
-  <p>
-    The science page is being written. It will cover the work behind the
-    platform: how emergent behavior in biological systems is modeled, and the
-    methods used to validate a model's understanding across scales.
-  </p>
-  <p>
-    <a href="/request-access">Request access</a> to be told when it is published.
-  </p>
-</Stub>
+<PageShell title={title} description={description} wide>
+  <Fragment slot="copy">
+    <p class="eyebrow">
+      <span class="pulse" aria-hidden="true"></span>
+      Our science
+    </p>
+
+    <h1>Does the AI Actually Learn Biology?</h1>
+
+    <p class="lede">
+      Frontier models are moving toward world models that understand the consequences of
+      their actions. We expect that within ten years, and we build the measurement layer that
+      tells you which models are getting there — so your teams adopt them early, on evidence,
+      and ahead of your competitors.
+    </p>
+
+    <section data-sci="1">
+      <h2 data-sci-title="1">Platform</h2>
+      <p class="claim">One layer between model and decision.</p>
+      <p class="body">
+        Our platform aims at innovating measurement and metrics to evaluate agentic AI systems
+        and frontier models, providing scalable methods to annotate your proprietary data and
+        make it AI-ready, compatible with any AI vendor.
+      </p>
+    </section>
+
+    <section data-sci="2" class="last">
+      <h2 data-sci-title="2">Why Generalizability Metrics Are Needed</h2>
+      <p class="claim">A model can use biology without having learned it.</p>
+      <p class="body">
+        Our science focuses on explainability and generalizability of intelligent systems,
+        toward decoding biological complex systems by distillation and encoding them to AI.
+        Our science similarly views AI as a complex system, and tests whether the AI actually
+        learns biology.
+      </p>
+      <p class="body">
+        Accuracy on a held-out split says a model fits the data it was given. Generalizability
+        metrics ask a different question: does the model carry an understanding that survives
+        a new target, a new assay, a new patient population — the conditions your next
+        decision will actually be made in.
+      </p>
+    </section>
+  </Fragment>
+
+  <Fragment slot="stage">
+    <ScenePanel kicker="Our science — live" initial="PLATFORM" noun="view" />
+  </Fragment>
+</PageShell>
+
+<script>
+  import { initScience } from '../scripts/science';
+
+  const stage = document.querySelector<HTMLElement>('[data-page-stage]');
+  if (stage) initScience(stage);
+</script>
+
+<style>
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-neutral-700);
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    background: var(--color-accent);
+    animation: bc-pulse 2.4s ease-in-out infinite;
+  }
+
+  h1 {
+    font-size: clamp(34px, 3.6vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0 0 22px;
+    max-width: 15ch;
+  }
+
+  .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--color-neutral-800);
+    max-width: 46ch;
+    margin: 0 0 28px;
+  }
+
+  section {
+    border-top: 2px solid var(--color-divider);
+    padding: 26px 0 30px;
+  }
+
+  section.last {
+    padding-bottom: 0;
+  }
+
+  h2 {
+    font-size: clamp(20px, 1.9vw, 27px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .claim {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 17px;
+    line-height: 1.35;
+    margin: 12px 0 0;
+    max-width: 42ch;
+  }
+
+  .body {
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--color-neutral-800);
+    margin: 10px 0 0;
+    max-width: 46ch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse {
+      animation: none;
+    }
+  }
+</style>

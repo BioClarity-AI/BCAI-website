@@ -14,15 +14,10 @@ export default defineConfig({
   base: '/',
   trailingSlash: 'ignore',
   integrations: [
-    sitemap({
-      // Keep the sitemap and the robots meta tag telling the same story: the
-      // holding pages are noindex, so they stay out. Delete an entry here when
-      // its page gets real content.
-      filter: (page) =>
-        !['/platform/', '/science/', '/company/', '/request-access/'].some((p) =>
-          page.endsWith(p),
-        ),
-    }),
+    // Every route now carries real content and is indexable, so nothing is
+    // filtered out. Add a filter entry here if a page is ever set noindex —
+    // the sitemap and the robots meta tag must tell the same story.
+    sitemap(),
   ],
   build: {
     // Emit /about/index.html rather than /about.html so Pages serves clean

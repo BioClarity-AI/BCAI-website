@@ -2,43 +2,168 @@
 /**
  * Site header. Links point at real routes only — a nav item that 404s costs
  * crawl budget and looks broken, so new items land here when their page does.
+ *
+ * Services and Science carry a menu of the sections on their page. Clicking one
+ * while already on that page must not reload it: the click is handed to the
+ * running canvas panel as an event instead, which scrolls the section into view
+ * and switches the scene. The href stays a real deep link so it works from any
+ * other page, and without JavaScript.
  */
-const links = [
-  { href: '/platform', label: 'Platform' },
-  { href: '/science', label: 'Science' },
+interface MenuItem {
+  href: string;
+  title: string;
+  blurb: string;
+  /** Index the page's panel uses to select the matching scene. */
+  index: number;
+}
+
+interface NavItem {
+  href: string;
+  label: string;
+  /** `hash` is the deep-link prefix the page's sections use: #svc-1, #sci-2. */
+  menu?: { event: string; hash: string; items: MenuItem[] };
+}
+
+const links: NavItem[] = [
+  {
+    href: '/services',
+    label: 'Services',
+    menu: {
+      event: 'bcai:service',
+      hash: 'svc',
+      items: [
+        {
+          href: '/services#svc-1',
+          title: 'AI Adoption Strategy',
+          blurb: 'Identify where AI can create measurable value.',
+          index: 1,
+        },
+        {
+          href: '/services#svc-2',
+          title: 'Validation & Benchmarking',
+          blurb: 'Prove what works for your science.',
+          index: 2,
+        },
+        {
+          href: '/services#svc-3',
+          title: 'AI & Data Products',
+          blurb: 'Build around your data, workflows, and portfolio.',
+          index: 3,
+        },
+        {
+          href: '/services#svc-4',
+          title: 'Portfolio Intelligence',
+          blurb: 'Turn complex evidence into better R&D decisions.',
+          index: 4,
+        },
+      ],
+    },
+  },
+  {
+    href: '/science',
+    label: 'Science',
+    menu: {
+      event: 'bcai:science',
+      hash: 'sci',
+      items: [
+        {
+          href: '/science#sci-1',
+          title: 'Platform',
+          blurb: 'One layer between model and decision.',
+          index: 1,
+        },
+        {
+          href: '/science#sci-2',
+          title: 'Why Generalizability Metrics',
+          blurb: 'Whether the AI actually learns biology.',
+          index: 2,
+        },
+      ],
+    },
+  },
   { href: '/company', label: 'Company' },
 ];
 
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 ---
 
-<header class="nav-bar">
+<header class="nav-bar" data-site-nav>
   <a class="brand" href="/">
     <span class="brand-name">BioClarity AI</span>
-    <span class="brand-tag">Emergent Systems</span>
+    <span class="brand-tag" data-brand-tag>Vendor Agnostic AI</span>
   </a>
 
   <nav class="nav-links" aria-label="Primary">
     {
-      links.map(({ href, label }) => (
-        <a href={href} aria-current={path === href ? 'page' : undefined}>
-          {label}
-        </a>
-      ))
+      links.map(({ href, label, menu }) =>
+        menu ? (
+          <div class="menu">
+            <a href={href} aria-current={path === href ? 'page' : undefined}>
+              {label}
+            </a>
+            <div class="menu-panel">
+              {menu.items.map((item) => (
+                <a
+                  href={item.href}
+                  data-pick={menu.event}
+                  data-pick-hash={menu.hash}
+                  data-pick-index={item.index}
+                  data-pick-path={href}
+                >
+                  <span class="menu-title">{item.title}</span>
+                  <span class="menu-blurb">{item.blurb}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <a href={href} aria-current={path === href ? 'page' : undefined}>
+            {label}
+          </a>
+        ),
+      )
     }
     <a class="btn btn-primary nav-cta" href="/request-access">Request access</a>
   </nav>
 </header>
+
+<script>
+  /**
+   * A menu pick for the page you are already on: keep the page, hand the
+   * selection to its panel. Anywhere else the link navigates normally.
+   */
+  document.querySelectorAll<HTMLAnchorElement>('[data-pick]').forEach((link) => {
+    link.addEventListener('click', (event) => {
+      const { pick, pickHash, pickIndex, pickPath } = link.dataset;
+      if (!pick || !pickHash || !pickIndex || !pickPath) return;
+
+      const here = location.pathname.replace(/\/$/, '') || '/';
+      if (here !== pickPath) return;
+
+      event.preventDefault();
+      const index = Number(pickIndex);
+      try {
+        history.replaceState(null, '', `#${pickHash}-${index}`);
+      } catch {
+        /* a blocked history write must not stop the selection */
+      }
+      window.dispatchEvent(new CustomEvent(pick, { detail: index }));
+      // Drop the hover state so the menu closes behind the pick.
+      (document.activeElement as HTMLElement | null)?.blur?.();
+    });
+  });
+</script>
 
 <style>
   .nav-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-4);
+    gap: var(--space-6);
     padding: 18px 32px;
     border-bottom: 2px solid var(--color-divider);
     flex: none;
+    background: var(--color-bg);
   }
 
   .brand {
@@ -47,6 +172,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     gap: 10px;
     color: var(--color-text);
     text-decoration: none;
+    flex: none;
   }
 
   .brand-name {
@@ -54,6 +180,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     font-weight: 800;
     font-size: 18px;
     letter-spacing: -0.02em;
+    white-space: nowrap;
   }
 
   .brand-tag {
@@ -61,20 +188,24 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-neutral-600);
+    white-space: nowrap;
   }
 
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 28px;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: clamp(12px, 2.2vw, 28px);
   }
 
-  .nav-links a:not(.btn) {
-    font-size: 13px;
+  .nav-links a:not(.btn):not(.menu-panel a) {
+    font-size: clamp(13px, 1.25vw, 15px);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--color-text);
     text-decoration: none;
+    white-space: nowrap;
   }
 
   .nav-links a:not(.btn):hover,
@@ -82,8 +213,71 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     color: var(--color-accent);
   }
 
+  /* The vertical padding bridges the gap to the panel, so moving the pointer
+     from the label onto the menu never crosses dead space and closes it. */
+  .menu {
+    position: relative;
+    padding: 20px 0;
+    margin: -20px 0;
+  }
+
+  .menu-panel {
+    position: absolute;
+    top: 100%;
+    left: -18px;
+    width: 336px;
+    display: none;
+    background: var(--color-bg);
+    border: 2px solid var(--color-divider);
+    border-top: 0;
+    z-index: 20;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* focus-within keeps the menu reachable by keyboard, which the hover-only
+     source could not be. */
+  .menu:hover .menu-panel,
+  .menu:focus-within .menu-panel {
+    display: block;
+  }
+
+  .menu-panel a {
+    display: block;
+    padding: 14px 18px;
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .menu-panel a + a {
+    border-top: 2px solid var(--color-divider);
+  }
+
+  .menu-panel a:hover,
+  .menu-panel a:focus-visible {
+    background: var(--color-accent);
+    color: var(--color-neutral-100);
+  }
+
+  .menu-title {
+    display: block;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 13px;
+    letter-spacing: -0.01em;
+  }
+
+  .menu-blurb {
+    display: block;
+    font-size: 12px;
+    line-height: 1.4;
+    color: currentColor;
+    opacity: 0.7;
+    margin-top: 3px;
+  }
+
   .nav-cta {
-    padding: 10px 16px;
+    padding: 9px 14px;
+    font-size: 12px;
     white-space: nowrap;
   }
 
@@ -91,8 +285,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     .nav-bar {
       padding: 14px 20px;
     }
-    .brand-tag,
-    .nav-links a:not(.btn) {
+    .nav-links a:not(.btn):not(.menu-panel a) {
+      display: none;
+    }
+    .menu {
       display: none;
     }
   }

@@ -1,18 +1,86 @@
 ---
-import Stub from '../layouts/Stub.astro';
+import PageShell from '../layouts/PageShell.astro';
+
+const title = 'Company — BioClarity AI';
+const description =
+  'BioClarity AI sits between the companies building agentic science and the pharma and biotech teams who have to act on what it produces — the trust and validation layer across AI-driven science.';
 ---
 
-<Stub
-  title="Company — BioClarity AI"
-  description="About BioClarity AI — the team building the trust and validation layer for AI-driven science."
-  heading="Company"
->
-  <p>
-    The company page is being written. It will introduce the team, the
-    advisors, and what we are building toward.
-  </p>
-  <p>
-    For anything urgent, email
-    <a href="mailto:info@bioclarity.ai">info@bioclarity.ai</a>.
-  </p>
-</Stub>
+<PageShell title={title} description={description}>
+  <Fragment slot="copy">
+    <p class="eyebrow">
+      <span class="pulse" aria-hidden="true"></span>
+      Who we are
+    </p>
+
+    <h1>Built For The Adoption Gap</h1>
+
+    <p class="lede">
+      BioClarity AI will become the trust and validation layer across AI-driven science. We
+      sit between the companies building agentic science and the pharma and biotech teams who
+      have to act on what it produces.
+    </p>
+  </Fragment>
+
+  <Fragment slot="stage">
+    <canvas data-canvas aria-hidden="true"></canvas>
+  </Fragment>
+</PageShell>
+
+<script>
+  import { initCompany } from '../scripts/company';
+
+  const stage = document.querySelector<HTMLElement>('[data-page-stage]');
+  if (stage) initCompany(stage);
+</script>
+
+<style>
+  canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-neutral-700);
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    background: var(--color-accent);
+    animation: bc-pulse 2.4s ease-in-out infinite;
+  }
+
+  h1 {
+    font-size: clamp(34px, 3.6vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0 0 22px;
+    max-width: 15ch;
+  }
+
+  .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--color-neutral-800);
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse {
+      animation: none;
+    }
+  }
+</style>

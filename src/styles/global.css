@@ -356,3 +356,27 @@ textarea.input { min-height: 90px; resize: vertical; }
 
 @keyframes bc-pulse { 0%,100% { opacity: 1 } 50% { opacity: 0.25 } }
 html, body { margin: 0; height: 100%; }
+
+/* Nav must stay on one line: shed the brand tag before the links can crowd. */
+@media (max-width: 880px) { [data-brand-tag] { display: none } }
+
+/* The page shell is one viewport tall and owns its own scrolling columns; the
+   document itself must not scroll, but it must never be taller than the window
+   either (see the shell's height: 100dvh).
+
+   Below the stacking breakpoint the two columns become one tall column and the
+   document has to scroll again — the design source is desktop-only, so this
+   query is ours, not its. */
+@media (min-width: 901px) {
+  html, body { overflow: hidden; height: 100%; }
+}
+
+/* Section pick flash: the nav can select a service without a page load. */
+@keyframes bc-flash {
+  0%, 45% { background: color-mix(in oklch, var(--color-accent) 16%, transparent); }
+  100% { background: transparent; }
+}
+
+/* Between documents the browser shows the html ground — keep it on-brand so
+   navigation never flashes white. */
+html { background: var(--color-bg); }

@@ -1,6 +1,5 @@
 ---
-import Base from '../layouts/Base.astro';
-import SiteNav from '../components/SiteNav.astro';
+import PageShell from '../layouts/PageShell.astro';
 import Emergence from '../components/Emergence.astro';
 
 const stats = [
@@ -9,83 +8,45 @@ const stats = [
   { value: '∞', label: 'Emergent states' },
 ];
 
-const title = 'BioClarity AI — the trust and validation layer for AI-driven science';
+const title = 'BioClarity AI — turn AI adoption into scientific value';
 const description =
-  'Biology and AI are both complex systems. BioClarity AI is where an AI’s understanding of living systems, from molecule to organism, becomes something you can verify.';
+  'BioClarity gives pharma and biotech leaders a vendor-agnostic way to identify where AI can create real impact, validate it against their own data and workflows, and tailor proven capabilities to their portfolio.';
 ---
 
-<Base title={title} description={description}>
-  <div class="shell">
-    <SiteNav />
+<PageShell title={title} description={description}>
+  <Fragment slot="copy">
+    <p class="eyebrow">
+      <span class="pulse" aria-hidden="true"></span>
+      Trust Layer for Agentic Science
+    </p>
 
-    <main class="split">
-      <section class="intro" aria-labelledby="hero-heading">
-        <p class="eyebrow">
-          <span class="pulse" aria-hidden="true"></span>
-          Two complex systems · one emergence
-        </p>
+    <h1>Turn AI Adoption Into Scientific Value</h1>
 
-        <h1 id="hero-heading">The trust and validation layer across AI-driven science.</h1>
+    <p class="lede">
+      AI is moving faster than most R&D organizations can confidently adopt it. BioClarity
+      gives pharma and biotech leaders a vendor-agnostic way to identify where AI can create
+      real impact, validate it against their own data and workflows, and tailor proven
+      capabilities to their portfolio—so AI investment is grounded in evidence, not hype.
+    </p>
 
-        <p class="lede">
-          Biology and AI are both complex systems — simple rules giving rise to emergent
-          behavior. BioClarity is where an AI’s understanding of living systems, from
-          molecule to organism, becomes something you can verify.
-        </p>
+    <dl class="stats">
+      {
+        stats.map(({ value, label }) => (
+          <div class="stat">
+            <dt class="stat-value">{value}</dt>
+            <dd class="stat-label">{label}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </Fragment>
 
-        <div class="actions">
-          <a class="btn btn-primary" href="/request-access">Request access →</a>
-          <a class="btn btn-secondary" href="/science">Read the science</a>
-        </div>
-
-        <dl class="stats">
-          {
-            stats.map(({ value, label }) => (
-              <div class="stat">
-                <dt class="stat-value">{value}</dt>
-                <dd class="stat-label">{label}</dd>
-              </div>
-            ))
-          }
-        </dl>
-      </section>
-
-      <Emergence />
-    </main>
-  </div>
-</Base>
+  <Fragment slot="stage">
+    <Emergence />
+  </Fragment>
+</PageShell>
 
 <style>
-  .shell {
-    height: 100vh;
-    height: 100svh;
-    min-height: 640px;
-    display: flex;
-    flex-direction: column;
-    background: var(--color-bg);
-    color: var(--color-text);
-    overflow: hidden;
-    position: relative;
-  }
-
-  .split {
-    flex: 1;
-    display: grid;
-    grid-template-columns: minmax(380px, 40%) 1fr;
-    min-height: 0;
-  }
-
-  .intro {
-    padding: 40px 44px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-right: 2px solid var(--color-divider);
-    min-width: 0;
-    min-height: 0;
-    overflow-y: auto;
-  }
-
   .eyebrow {
     display: flex;
     align-items: center;
@@ -121,18 +82,6 @@ const description =
     margin: 0 0 32px;
   }
 
-  .actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 40px;
-  }
-
-  .actions .btn {
-    padding: 14px 20px;
-    font-size: 15px;
-  }
-
   .stats {
     border-top: 2px solid var(--color-divider);
     padding-top: 16px;
@@ -154,28 +103,6 @@ const description =
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-neutral-600);
-  }
-
-  /* Below the two-column breakpoint the copy leads and the simulation follows,
-     so the h1 is the first thing on screen on a phone. */
-  @media (max-width: 900px) {
-    .shell {
-      height: auto;
-      min-height: 100svh;
-      overflow: visible;
-    }
-    .split {
-      grid-template-columns: 1fr;
-    }
-    .intro {
-      padding: 32px 20px;
-      border-right: 0;
-      border-bottom: 2px solid var(--color-divider);
-      overflow: visible;
-    }
-    :global(.emergence) {
-      min-height: 60svh;
-    }
   }
 
   @media (prefers-reduced-motion: reduce) {

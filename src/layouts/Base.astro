@@ -86,6 +86,90 @@ const organizationSchema = {
       set:html={JSON.stringify(organizationSchema)}
     />
 
+    <!-- Page-to-page fades. Cross-document view transitions snapshot the new
+         page before its content has mounted, which reads as a flash, so the
+         fade is driven here instead: hide the body, reveal it once the page
+         content exists, fade out before following a link.
+
+         is:inline and in the head on purpose — a bundled module script is
+         deferred, so the browser would paint the page before this could hide
+         it and the fade would become a flicker. The 1.2s deadline in check()
+         is the safety net: the body reveals itself even if the content probe
+         never matches. -->
+    <script is:inline>
+      (function () {
+        if (window.__bcaiPageFade) return;
+        window.__bcaiPageFade = true;
+        var d = document;
+
+        var st = d.createElement('style');
+        st.textContent = 'body { opacity: 0; }';
+        (d.head || d.documentElement).appendChild(st);
+
+        function reveal() {
+          if (!d.body) return;
+          d.body.style.transition = 'opacity 0.3s ease';
+          d.body.style.opacity = '0';
+          st.remove();
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              d.body.style.opacity = '1';
+              setTimeout(function () {
+                d.body.style.transition = '';
+                d.body.style.opacity = '';
+              }, 400);
+            });
+          });
+        }
+
+        // The shell pages mount their copy column; 404 and any future plain
+        // page only have a <main>. Either counts as "there is content now".
+        var t0 = Date.now();
+        (function check() {
+          var ready = d.body && (d.querySelector('[data-page-copy], main') || Date.now() - t0 > 1200);
+          if (ready) reveal();
+          else setTimeout(check, 40);
+        })();
+
+        // Restored from bfcache: make sure nothing is left faded out.
+        window.addEventListener('pageshow', function (e) {
+          if (e.persisted && d.body) {
+            st.remove();
+            d.body.style.opacity = '1';
+            d.body.style.transition = '';
+          }
+        });
+
+        d.addEventListener(
+          'click',
+          function (e) {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var a = e.target && e.target.closest && e.target.closest('a[href]');
+            if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+            var href = a.getAttribute('href') || '';
+            if (/^(mailto:|tel:|#|javascript:)/i.test(href)) return;
+            var url;
+            try {
+              url = new URL(a.href, location.href);
+            } catch (err) {
+              return;
+            }
+            if (url.origin !== location.origin) return;
+            if (url.pathname === location.pathname && url.hash) return; // in-page anchor
+            e.preventDefault();
+            if (d.body) {
+              d.body.style.transition = 'opacity 0.16s ease';
+              d.body.style.opacity = '0';
+            }
+            setTimeout(function () {
+              location.href = url.href;
+            }, 170);
+          },
+          true,
+        );
+      })();
+    </script>
+
     <slot name="head" />
   </head>
   <body>
