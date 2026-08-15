@@ -430,9 +430,26 @@ export function initEmergence(root: HTMLElement): EmergenceHandle {
   // manual transition override: eases from one shape to another
   let ov: { from: number; to: number; p: number } | null = null;
 
+  // The formation on screen right now, auto or manual. Stepping from the
+  // segment index instead would jump back a shape when an auto transition is
+  // already past halfway.
+  let curIdx = 0;
+  // Presses that arrive mid-transition, applied when the current one lands.
+  let queued = 0;
+
   const nav = (d: number) => {
-    const base = ov ? ov.to : Math.floor((tPhase % loop) / slot);
-    ov = { from: ov ? ov.to : base, to: (((base + d) % n) + n) % n, p: 0 };
+    if (ov) {
+      // Reversing the move in flight: play it backwards from where it is.
+      if ((((ov.to - d) % n) + n) % n === ov.from) {
+        ov = { from: ov.to, to: ov.from, p: 1 - ov.p };
+        return;
+      }
+      // Otherwise queue it. Restarting the ease from its destination makes
+      // every particle target jump the remaining distance in one frame.
+      queued = Math.max(-2, Math.min(2, queued + d));
+      return;
+    }
+    ov = { from: curIdx, to: (((curIdx + d) % n) + n) % n, p: 0 };
   };
   const snap = () => {
     if (ov) { tPhase = ov.to * slot; return; }
@@ -487,16 +504,24 @@ export function initEmergence(root: HTMLElement): EmergenceHandle {
     if (ov) {
       ov.p += (dt * speed * sp) / TRANS;
       if (ov.p >= 1) {
-        tPhase = ov.to * slot;
-        cur = nxt = SHAPES[ov.to]!;
+        const done = ov.to;
+        tPhase = done * slot;
+        cur = nxt = SHAPES[done]!;
         blend = 0;
         active = cur;
+        curIdx = done;
         ov = null;
+        if (queued) {
+          const d = queued > 0 ? 1 : -1;
+          queued -= d;
+          ov = { from: done, to: (((done + d) % n) + n) % n, p: 0 };
+        }
       } else {
         cur = SHAPES[ov.from]!;
         nxt = SHAPES[ov.to]!;
         blend = smooth(ov.p);
         active = blend < 0.5 ? cur : nxt;
+        curIdx = blend < 0.5 ? ov.from : ov.to;
       }
     } else {
       const tt = tPhase % loop;
@@ -506,6 +531,7 @@ export function initEmergence(root: HTMLElement): EmergenceHandle {
       nxt = SHAPES[(seg + 1) % n]!;
       blend = local < hold ? 0 : smooth((local - hold) / TRANS);
       active = blend < 0.5 ? cur : nxt;
+      curIdx = blend < 0.5 ? seg : (seg + 1) % n;
     }
 
     for (let i = 0; i < N; i++) {
