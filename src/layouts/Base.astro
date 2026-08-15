@@ -46,6 +46,21 @@ const organizationSchema = {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
+    <!-- The ground, inline and first. global.css is a render-blocking link, and
+         the html background lives inside it, so until it arrives the browser
+         paints its own white canvas — that is the flash between pages. This
+         paints the brand ground from the first byte instead.
+
+         The literal is deliberate: a var() cannot help here, because the file
+         that defines the token is the one being waited on. Keep it in step
+         with --color-bg in global.css. -->
+    <style is:inline>
+      html,
+      body {
+        background: #f3f2f2;
+      }
+    </style>
+
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
