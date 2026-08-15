@@ -12,9 +12,53 @@
  */
 
 import type { EmergenceOptions } from './emergence';
+import type { ServicesOptions } from './services';
+import type { ScienceOptions } from './science';
+import type { CompanyOptions } from './company';
+import type { RequestAccessOptions } from './requestAccess';
 
+/**
+ * One section per drawn panel on the site. Every key is optional at every
+ * level: a section that is missing, or a value inside it that is malformed,
+ * leaves the compiled-in default in place.
+ */
 export interface Settings {
   emergence?: Partial<EmergenceOptions>;
+  services?: Partial<ServicesOptions>;
+  science?: Partial<ScienceOptions>;
+  company?: Partial<CompanyOptions>;
+  requestAccess?: Partial<RequestAccessOptions>;
+}
+
+/**
+ * Copy the well-formed values of `next` over `target`, in place.
+ *
+ * Only keys already present on `target` are considered, and only when the
+ * incoming value has the same type and — for numbers — is finite. Everything
+ * else is ignored, which is what keeps a hand-edited settings.json from being
+ * able to break a panel: the worst a bad value can do is nothing.
+ */
+export function applySettings<T extends object>(target: T, next: Partial<T> | undefined): void {
+  if (!next || typeof next !== 'object') return;
+
+  // The whole point of this helper is to copy values whose types are only
+  // known at runtime, which no generic signature can express — so the two
+  // casts are the unsoundness, contained here and guarded by the typeof
+  // checks below rather than spread across five callers.
+  const into = target as Record<string, unknown>;
+  const from = next as Record<string, unknown>;
+
+  // Driven by the target's keys, so a stray key in settings.json — the
+  // "_note" annotations, or a typo — is ignored rather than copied in.
+  for (const key of Object.keys(into)) {
+    const current = into[key];
+    const value = from[key];
+    if (typeof current === 'number') {
+      if (typeof value === 'number' && Number.isFinite(value)) into[key] = value;
+    } else if (typeof current === 'boolean') {
+      if (typeof value === 'boolean') into[key] = value;
+    }
+  }
 }
 
 /**

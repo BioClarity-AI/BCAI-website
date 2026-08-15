@@ -37,9 +37,15 @@ const mailto = 'mailto:info@bioclarity.ai?subject=Request%20access';
 
 <script>
   import { initRequestAccess } from '../scripts/requestAccess';
+  import { loadSettings } from '../scripts/settings';
 
   const stage = document.querySelector<HTMLElement>('[data-page-stage]');
-  if (stage) initRequestAccess(stage);
+  if (stage) {
+    const panel = initRequestAccess(stage);
+    loadSettings().then(({ requestAccess }) => {
+      if (requestAccess) panel.update(requestAccess);
+    });
+  }
 </script>
 
 <style>

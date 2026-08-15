@@ -84,6 +84,34 @@ the section into view and switch the stage to match. The nav menus use the same
 hooks: from another page they are ordinary links, and on the page itself the
 click is handed to the running panel instead of reloading.
 
+## Retuning the animations
+
+Every panel reads its timings from `public/settings.json` at runtime, one
+section per panel. Edit that file and reload — no rebuild, no deploy.
+
+| Section | Panel | Keys |
+| --- | --- | --- |
+| `emergence` | Landing hero | `speed`, `holdTime`, `linkStrength`, `mouseForce`, `mono` |
+| `services` | Services | `speed`, `mono`, `adoptionSeconds`, `validationSeconds`, `foundationSeconds`, `portfolioSeconds` |
+| `science` | Science | `speed`, `mono`, `platformSeconds`, `generalizabilitySeconds` |
+| `company` | Company | `speed`, `mono`, `loopSeconds` |
+| `requestAccess` | Request access | `speed`, `mono`, `loopSeconds` |
+
+`speed` multiplies playback. A `*Seconds` key on a multi-scene panel is how
+long that scene holds before the panel advances; `loopSeconds` on a
+single-animation panel is how long one full telling takes, with the beats
+inside keeping their relative timing. `mono` drops the accent and draws in ink.
+
+Each panel starts on the defaults compiled into its module and retunes in place
+once the file lands, so nothing waits on a network round trip. Every key is
+optional: a missing section, a missing key, or a malformed value leaves the
+compiled-in default alone — a broken `settings.json` cannot take a page down.
+The defaults themselves live beside the code they drive (`SERVICES_DEFAULTS`
+and friends); `settings.json` should mirror them, not diverge silently.
+
+The `_readme`, `_units` and `_note` keys in the file are documentation. The
+merge is driven by each module's own option keys, so unknown keys are ignored.
+
 ### Adding a scene
 
 Write a `Scene` (`label`, `duration`, `reset`, `draw`) in the page's script,

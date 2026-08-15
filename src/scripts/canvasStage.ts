@@ -34,6 +34,9 @@ export interface Stage {
   /** Lightest neutral — legible on top of a filled ink band. */
   n100: string;
   font: string;
+  /** The accent as the design defines it, whatever `acc` is currently set to. */
+  accent: string;
+  /** The accent a drawing should use — ink instead, when it is running mono. */
   acc: string;
 
   ease(x: number): number;
@@ -142,6 +145,7 @@ export function createStage(
     bg: token('--color-bg', '#f3f2f2'),
     n100: token('--color-neutral-100', '#f8f4f4'),
     font: token('--font-heading', 'Archivo, system-ui, sans-serif'),
+    accent: token('--color-accent', '#ec3013'),
     acc: token('--color-accent', '#ec3013'),
     ease: (x) => x * x * (3 - 2 * x),
     lerp: (a, b, t) => a + (b - a) * t,

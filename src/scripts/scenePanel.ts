@@ -14,6 +14,16 @@ import { createStage, runLoop, type LayoutSpec, type Stage } from './canvasStage
 
 export type { Stage } from './canvasStage';
 
+/** What a settings.json section can retune on a running panel. */
+export interface ScenePanelOptions {
+  /** Playback rate multiplier for the scenes. */
+  speed: number;
+  /** Ink-only rendering, no accent colour. */
+  mono: boolean;
+  /** Seconds each scene holds before the panel advances, in scene order. */
+  durations: number[];
+}
+
 export interface Scene {
   /** Shown in the readout above the controls. */
   label: string;
@@ -40,16 +50,19 @@ export interface ScenePanelConfig extends LayoutSpec {
 const FADE = 0.55;
 
 export interface ScenePanelHandle {
+  /** Retune a running panel. Omitted keys are left alone. */
+  update(next: Partial<ScenePanelOptions>): void;
   destroy(): void;
 }
 
 export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): ScenePanelHandle {
+  const noop: ScenePanelHandle = { update() {}, destroy() {} };
   const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
-  if (!canvas) return { destroy() {} };
+  if (!canvas) return noop;
 
   const overlay = root.querySelector<HTMLElement>('[data-overlay]');
   const handle = createStage(canvas, { overlay, layout: config });
-  if (!handle) return { destroy() {} };
+  if (!handle) return noop;
 
   const { stage, measure } = handle;
   const { ctx } = stage;
@@ -62,6 +75,11 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
   const copy = document.querySelector<HTMLElement>('[data-page-copy]');
 
   const titles = copy ? Array.from(copy.querySelectorAll<HTMLElement>(`[${config.titleAttr}]`)) : [];
+
+  // Retunable at runtime from settings.json; the scene list supplies the
+  // starting durations, so a section that omits them keeps the authored pacing.
+  let speed = 1;
+  let mono = false;
 
   // Reduced motion: hold one scene rather than cycling through them.
   let held = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -103,12 +121,16 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
   show(0);
   paintLock();
 
-  const loop = runLoop(panel, (dt) => {
+  const loop = runLoop(panel, (raw) => {
     measure();
+    stage.acc = mono ? stage.ink : stage.accent;
+    // The cross-fade runs at its own pace: it is a transition between scenes,
+    // not part of one, so `speed` must not stretch it.
+    const dt = raw * speed;
 
     let alpha = 1;
     if (trans) {
-      trans.p += dt / FADE;
+      trans.p += raw / FADE;
       // Swap at the midpoint of the fade, when the panel is at its darkest.
       if (trans.p >= 0.5 && idx !== trans.to) {
         idx = trans.to;
@@ -183,6 +205,19 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
   window.addEventListener(config.pickEvent, onPick);
 
   return {
+    update(next) {
+      if (typeof next.speed === 'number' && Number.isFinite(next.speed) && next.speed > 0) speed = next.speed;
+      if (typeof next.mono === 'boolean') mono = next.mono;
+      if (Array.isArray(next.durations)) {
+        next.durations.forEach((seconds, i) => {
+          const scene = scenes[i];
+          if (scene && typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0) {
+            scene.duration = seconds;
+          }
+        });
+      }
+    },
+
     destroy() {
       loop.destroy();
       handle.destroy();

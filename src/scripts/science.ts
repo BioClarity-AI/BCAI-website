@@ -7,7 +7,36 @@
  * does its understanding still hold?
  */
 
-import { initScenePanel, type Scene, type ScenePanelHandle } from './scenePanel';
+import { initScenePanel, type Scene } from './scenePanel';
+import { applySettings } from './settings';
+
+/** Tunable from the `science` section of public/settings.json. */
+export interface ScienceOptions {
+  /** Playback rate multiplier for both scenes. */
+  speed: number;
+  /** Ink-only rendering, no accent colour. */
+  mono: boolean;
+  /** Seconds the measurement-layer scene runs before the panel advances. */
+  platformSeconds: number;
+  /** Seconds the generalizability-frontier scene runs. */
+  generalizabilitySeconds: number;
+}
+
+/**
+ * Compiled-in fallbacks — the single source of truth for these values.
+ * `public/settings.json` overrides them at runtime.
+ */
+export const SCIENCE_DEFAULTS: ScienceOptions = {
+  speed: 1,
+  mono: false,
+  platformSeconds: 14,
+  generalizabilitySeconds: 15,
+};
+
+export interface ScienceHandle {
+  update(next: Partial<ScienceOptions>): void;
+  destroy(): void;
+}
 
 /* ── SCENE 1 · PLATFORM — the measurement layer ─────────────────────────────
    Unresolved claims drift out of the unknown; each one crosses a single
@@ -316,8 +345,10 @@ function frontierScene(): Scene {
   };
 }
 
-export function initScience(root: HTMLElement): ScenePanelHandle {
-  return initScenePanel(root, {
+export function initScience(root: HTMLElement): ScienceHandle {
+  const opts: ScienceOptions = { ...SCIENCE_DEFAULTS };
+
+  const panel = initScenePanel(root, {
     scenes: [platformScene(), frontierScene()],
     sectionAttr: 'data-sci',
     titleAttr: 'data-sci-title',
@@ -328,4 +359,20 @@ export function initScience(root: HTMLElement): ScenePanelHandle {
     bottom: 84,
     topGap: 44,
   });
+
+  const push = () =>
+    panel.update({
+      speed: opts.speed,
+      mono: opts.mono,
+      durations: [opts.platformSeconds, opts.generalizabilitySeconds],
+    });
+  push();
+
+  return {
+    update(next) {
+      applySettings(opts, next);
+      push();
+    },
+    destroy: () => panel.destroy(),
+  };
 }

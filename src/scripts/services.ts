@@ -8,7 +8,43 @@
  * accumulates until a gate resolves.
  */
 
-import { initScenePanel, type Scene, type ScenePanelHandle, type Stage } from './scenePanel';
+import { initScenePanel, type Scene, type Stage } from './scenePanel';
+import { applySettings } from './settings';
+
+/** Tunable from the `services` section of public/settings.json. */
+export interface ServicesOptions {
+  /** Playback rate multiplier for every scene. */
+  speed: number;
+  /** Ink-only rendering, no accent colour. */
+  mono: boolean;
+  /** Seconds the adoption-screening scene runs before the panel advances. */
+  adoptionSeconds: number;
+  /** Seconds the vendor-benchmark scene runs. */
+  validationSeconds: number;
+  /** Seconds the data-foundation scene runs. */
+  foundationSeconds: number;
+  /** Seconds the portfolio-gate scene runs. */
+  portfolioSeconds: number;
+}
+
+/**
+ * Compiled-in fallbacks — the single source of truth for these values.
+ * `public/settings.json` overrides them at runtime; this is what renders if
+ * that file is missing, unreachable, or malformed.
+ */
+export const SERVICES_DEFAULTS: ServicesOptions = {
+  speed: 1,
+  mono: false,
+  adoptionSeconds: 16.5,
+  validationSeconds: 10.6,
+  foundationSeconds: 12,
+  portfolioSeconds: 11.9,
+};
+
+export interface ServicesHandle {
+  update(next: Partial<ServicesOptions>): void;
+  destroy(): void;
+}
 
 /* ── SCENE 1 · Adoption screening ───────────────────────────────────────────
    Candidates are measured on whether they change a decision; usage alone never
@@ -948,8 +984,10 @@ function portfolioScene(): Scene {
   };
 }
 
-export function initServices(root: HTMLElement): ScenePanelHandle {
-  return initScenePanel(root, {
+export function initServices(root: HTMLElement): ServicesHandle {
+  const opts: ServicesOptions = { ...SERVICES_DEFAULTS };
+
+  const panel = initScenePanel(root, {
     scenes: [adoptionScene(), validationScene(), foundationScene(), portfolioScene()],
     sectionAttr: 'data-svc',
     titleAttr: 'data-svc-title',
@@ -960,4 +998,22 @@ export function initServices(root: HTMLElement): ScenePanelHandle {
     bottom: 90,
     topGap: 46,
   });
+
+  // The panel takes durations positionally; this is the one place that knows
+  // which scene each named setting belongs to.
+  const push = () =>
+    panel.update({
+      speed: opts.speed,
+      mono: opts.mono,
+      durations: [opts.adoptionSeconds, opts.validationSeconds, opts.foundationSeconds, opts.portfolioSeconds],
+    });
+  push();
+
+  return {
+    update(next) {
+      applySettings(opts, next);
+      push();
+    },
+    destroy: () => panel.destroy(),
+  };
 }

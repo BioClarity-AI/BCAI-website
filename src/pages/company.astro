@@ -29,9 +29,15 @@ const description =
 
 <script>
   import { initCompany } from '../scripts/company';
+  import { loadSettings } from '../scripts/settings';
 
   const stage = document.querySelector<HTMLElement>('[data-page-stage]');
-  if (stage) initCompany(stage);
+  if (stage) {
+    const panel = initCompany(stage);
+    loadSettings().then(({ company }) => {
+      if (company) panel.update(company);
+    });
+  }
 </script>
 
 <style>

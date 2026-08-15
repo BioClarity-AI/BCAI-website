@@ -10,6 +10,31 @@
  */
 
 import { createStage, runLoop } from './canvasStage';
+import { applySettings } from './settings';
+
+/** Tunable from the `company` section of public/settings.json. */
+export interface CompanyOptions {
+  /** Playback rate multiplier. */
+  speed: number;
+  /** Ink-only rendering, no accent colour. */
+  mono: boolean;
+  /**
+   * Seconds one telling of the story takes at speed 1. The phase table below
+   * is authored against COMPANY_DEFAULTS.loopSeconds and scaled to fit this,
+   * so the beats keep their relative timing however long the loop runs.
+   */
+  loopSeconds: number;
+}
+
+/**
+ * Compiled-in fallbacks — the single source of truth for these values.
+ * `public/settings.json` overrides them at runtime.
+ */
+export const COMPANY_DEFAULTS: CompanyOptions = {
+  speed: 1,
+  mono: false,
+  loopSeconds: 14.5,
+};
 
 const GATES = ['DISCOVERY', 'PRECLIN', 'PH I', 'PH II', 'PH III'];
 const SHORT = ['DISC', 'PRE', 'I', 'II', 'III'];
@@ -23,19 +48,22 @@ const money = (v: number) =>
   v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : v >= 1e6 ? `$${Math.round(v / 1e6)}M` : `$${Math.round(v / 1e3)}K`;
 
 export interface CompanyHandle {
+  update(next: Partial<CompanyOptions>): void;
   destroy(): void;
 }
 
 export function initCompany(root: HTMLElement): CompanyHandle {
+  const noop: CompanyHandle = { update() {}, destroy() {} };
   const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
-  if (!canvas) return { destroy() {} };
+  if (!canvas) return noop;
 
   const handle = createStage(canvas);
-  if (!handle) return { destroy() {} };
+  if (!handle) return noop;
 
   const { stage: s, measure } = handle;
   const { ctx } = s;
   const panel = canvas.parentElement as HTMLElement;
+  const opts: CompanyOptions = { ...COMPANY_DEFAULTS };
   let t = 0;
 
   /** A program on its track. The accent notch is the flaw it is carrying. */
@@ -50,8 +78,12 @@ export function initCompany(root: HTMLElement): CompanyHandle {
     ctx.restore();
   };
 
-  const loop = runLoop(panel, (dt) => {
+  const loop = runLoop(panel, (raw) => {
     measure();
+    s.acc = opts.mono ? s.ink : s.accent;
+    // Advance in the phase table's own units, so T.* stay authored constants
+    // however long a caller wants the loop to take.
+    const dt = raw * opts.speed * (T.end / opts.loopSeconds);
     t += dt;
     if (t > T.end) t = 0;
 
@@ -243,6 +275,14 @@ export function initCompany(root: HTMLElement): CompanyHandle {
   });
 
   return {
+    update(next) {
+      applySettings(opts, next);
+      // A zero or negative loop would divide the clock to a standstill or run
+      // it backwards; fall back rather than freeze the panel.
+      if (opts.loopSeconds <= 0) opts.loopSeconds = COMPANY_DEFAULTS.loopSeconds;
+      if (opts.speed <= 0) opts.speed = COMPANY_DEFAULTS.speed;
+    },
+
     destroy() {
       loop.destroy();
       handle.destroy();

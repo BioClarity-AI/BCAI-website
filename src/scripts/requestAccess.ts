@@ -7,8 +7,32 @@
  */
 
 import { createStage, runLoop } from './canvasStage';
+import { applySettings } from './settings';
 
-/** Seconds in one loop. */
+/** Tunable from the `requestAccess` section of public/settings.json. */
+export interface RequestAccessOptions {
+  /** Playback rate multiplier. */
+  speed: number;
+  /** Ink-only rendering, no accent colour. */
+  mono: boolean;
+  /**
+   * Seconds one journey takes at speed 1. The phase table below is authored
+   * against LOOP and scaled to fit, so the beats keep their relative timing.
+   */
+  loopSeconds: number;
+}
+
+/**
+ * Compiled-in fallbacks — the single source of truth for these values.
+ * `public/settings.json` overrides them at runtime.
+ */
+export const REQUEST_ACCESS_DEFAULTS: RequestAccessOptions = {
+  speed: 1,
+  mono: false,
+  loopSeconds: 9,
+};
+
+/** Seconds in one loop, as the phase table below is authored. */
 const LOOP = 9;
 /** Phase boundaries: fly in → gate scan → verdict → fly on → arrive → joy. */
 const P = { fly1: 1.6, scan: 3.1, verd: 3.9, fly2: 5.2, eat: 5.8 };
@@ -24,19 +48,22 @@ interface Confetto {
 }
 
 export interface RequestAccessHandle {
+  update(next: Partial<RequestAccessOptions>): void;
   destroy(): void;
 }
 
 export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
+  const noop: RequestAccessHandle = { update() {}, destroy() {} };
   const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
-  if (!canvas) return { destroy() {} };
+  if (!canvas) return noop;
 
   const handle = createStage(canvas);
-  if (!handle) return { destroy() {} };
+  if (!handle) return noop;
 
   const { stage: s, measure } = handle;
   const { ctx } = s;
   const panel = canvas.parentElement as HTMLElement;
+  const opts: RequestAccessOptions = { ...REQUEST_ACCESS_DEFAULTS };
 
   let t = 0;
   let burst = false;
@@ -61,8 +88,11 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
     ctx.restore();
   };
 
-  const loop = runLoop(panel, (dt) => {
+  const loop = runLoop(panel, (raw) => {
     measure();
+    s.acc = opts.mono ? s.ink : s.accent;
+    // Advance in the phase table's own units, so P.* stay authored constants.
+    const dt = raw * opts.speed * (LOOP / opts.loopSeconds);
     t += dt;
     if (t > LOOP) {
       t = 0;
@@ -235,6 +265,14 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
   });
 
   return {
+    update(next) {
+      applySettings(opts, next);
+      // A zero or negative loop would divide the clock to a standstill or run
+      // it backwards; fall back rather than freeze the panel.
+      if (opts.loopSeconds <= 0) opts.loopSeconds = REQUEST_ACCESS_DEFAULTS.loopSeconds;
+      if (opts.speed <= 0) opts.speed = REQUEST_ACCESS_DEFAULTS.speed;
+    },
+
     destroy() {
       loop.destroy();
       handle.destroy();

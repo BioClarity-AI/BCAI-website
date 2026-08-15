@@ -80,9 +80,17 @@ const description =
 
 <script>
   import { initServices } from '../scripts/services';
+  import { loadSettings } from '../scripts/settings';
 
+  // Start on the compiled-in defaults so the panel never waits on a network
+  // round trip, then retune in place once settings.json lands.
   const stage = document.querySelector<HTMLElement>('[data-page-stage]');
-  if (stage) initServices(stage);
+  if (stage) {
+    const panel = initServices(stage);
+    loadSettings().then(({ services }) => {
+      if (services) panel.update(services);
+    });
+  }
 </script>
 
 <style>

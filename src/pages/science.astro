@@ -58,9 +58,15 @@ const description =
 
 <script>
   import { initScience } from '../scripts/science';
+  import { loadSettings } from '../scripts/settings';
 
   const stage = document.querySelector<HTMLElement>('[data-page-stage]');
-  if (stage) initScience(stage);
+  if (stage) {
+    const panel = initScience(stage);
+    loadSettings().then(({ science }) => {
+      if (science) panel.update(science);
+    });
+  }
 </script>
 
 <style>
