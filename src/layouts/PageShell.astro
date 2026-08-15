@@ -72,6 +72,10 @@ const { title, description, image, noindex, wide = false } = Astro.props;
   }
 
   .copy {
+    /* Makes this the offsetParent of the sections inside it, so the panel's
+       scroll-to-section maths measures from the column and not from the body
+       — otherwise it overshoots by the height of the nav. */
+    position: relative;
     padding: 28px 44px 40px;
     display: flex;
     flex-direction: column;
