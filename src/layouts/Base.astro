@@ -78,7 +78,10 @@ const organizationSchema = {
       crossorigin
     />
 
+    <!-- is:inline keeps this out of the JS bundle pipeline — it is data for
+         crawlers, not a script to execute. -->
     <script
+      is:inline
       type="application/ld+json"
       set:html={JSON.stringify(organizationSchema)}
     />

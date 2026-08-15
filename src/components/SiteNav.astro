@@ -1,0 +1,99 @@
+---
+/**
+ * Site header. Links point at real routes only — a nav item that 404s costs
+ * crawl budget and looks broken, so new items land here when their page does.
+ */
+const links = [
+  { href: '/platform', label: 'Platform' },
+  { href: '/science', label: 'Science' },
+  { href: '/company', label: 'Company' },
+];
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+---
+
+<header class="nav-bar">
+  <a class="brand" href="/">
+    <span class="brand-name">BioClarity AI</span>
+    <span class="brand-tag">Emergent Systems</span>
+  </a>
+
+  <nav class="nav-links" aria-label="Primary">
+    {
+      links.map(({ href, label }) => (
+        <a href={href} aria-current={path === href ? 'page' : undefined}>
+          {label}
+        </a>
+      ))
+    }
+    <a class="btn btn-primary nav-cta" href="/request-access">Request access</a>
+  </nav>
+</header>
+
+<style>
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: 18px 32px;
+    border-bottom: 2px solid var(--color-divider);
+    flex: none;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .brand-name {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+  }
+
+  .brand-tag {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-neutral-600);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .nav-links a:not(.btn) {
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .nav-links a:not(.btn):hover,
+  .nav-links a[aria-current='page'] {
+    color: var(--color-accent);
+  }
+
+  .nav-cta {
+    padding: 10px 16px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 700px) {
+    .nav-bar {
+      padding: 14px 20px;
+    }
+    .brand-tag,
+    .nav-links a:not(.btn) {
+      display: none;
+    }
+  }
+</style>

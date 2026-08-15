@@ -1,0 +1,186 @@
+---
+import Base from '../layouts/Base.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Emergence from '../components/Emergence.astro';
+
+const stats = [
+  { value: '8', label: 'Scales resolved' },
+  { value: '1', label: 'Validation layer' },
+  { value: '∞', label: 'Emergent states' },
+];
+
+const title = 'BioClarity AI — the trust and validation layer for AI-driven science';
+const description =
+  'Biology and AI are both complex systems. BioClarity AI is where an AI’s understanding of living systems, from molecule to organism, becomes something you can verify.';
+---
+
+<Base title={title} description={description}>
+  <div class="shell">
+    <SiteNav />
+
+    <main class="split">
+      <section class="intro" aria-labelledby="hero-heading">
+        <p class="eyebrow">
+          <span class="pulse" aria-hidden="true"></span>
+          Two complex systems · one emergence
+        </p>
+
+        <h1 id="hero-heading">The trust and validation layer across AI-driven science.</h1>
+
+        <p class="lede">
+          Biology and AI are both complex systems — simple rules giving rise to emergent
+          behavior. BioClarity is where an AI’s understanding of living systems, from
+          molecule to organism, becomes something you can verify.
+        </p>
+
+        <div class="actions">
+          <a class="btn btn-primary" href="/request-access">Request access →</a>
+          <a class="btn btn-secondary" href="/science">Read the science</a>
+        </div>
+
+        <dl class="stats">
+          {
+            stats.map(({ value, label }) => (
+              <div class="stat">
+                <dt class="stat-value">{value}</dt>
+                <dd class="stat-label">{label}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </section>
+
+      <Emergence />
+    </main>
+  </div>
+</Base>
+
+<style>
+  .shell {
+    height: 100vh;
+    height: 100svh;
+    min-height: 640px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg);
+    color: var(--color-text);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .split {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(380px, 40%) 1fr;
+    min-height: 0;
+  }
+
+  .intro {
+    padding: 40px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 2px solid var(--color-divider);
+    min-width: 0;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 22px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-neutral-700);
+  }
+
+  .pulse {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    background: var(--color-accent);
+    animation: bc-pulse 2.4s ease-in-out infinite;
+  }
+
+  h1 {
+    font-size: clamp(34px, 3.6vw, 56px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    margin: 0 0 22px;
+    max-width: 15ch;
+  }
+
+  .lede {
+    font-size: 17px;
+    line-height: 1.55;
+    color: var(--color-neutral-800);
+    max-width: 46ch;
+    margin: 0 0 32px;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .actions .btn {
+    padding: 14px 20px;
+    font-size: 15px;
+  }
+
+  .stats {
+    border-top: 2px solid var(--color-divider);
+    padding-top: 16px;
+    margin: 0;
+    display: flex;
+    gap: 32px;
+  }
+
+  .stat-value {
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .stat-label {
+    margin: 4px 0 0;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-neutral-600);
+  }
+
+  /* Below the two-column breakpoint the copy leads and the simulation follows,
+     so the h1 is the first thing on screen on a phone. */
+  @media (max-width: 900px) {
+    .shell {
+      height: auto;
+      min-height: 100svh;
+      overflow: visible;
+    }
+    .split {
+      grid-template-columns: 1fr;
+    }
+    .intro {
+      padding: 32px 20px;
+      border-right: 0;
+      border-bottom: 2px solid var(--color-divider);
+      overflow: visible;
+    }
+    :global(.emergence) {
+      min-height: 60svh;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .pulse {
+      animation: none;
+    }
+  }
+</style>
