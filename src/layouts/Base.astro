@@ -1,0 +1,91 @@
+---
+import '../styles/global.css';
+
+/**
+ * Every page's <head>. Astro renders this to static HTML at build time, so
+ * crawlers that do not execute JavaScript — Bing, LinkedIn, Slack, and the LLM
+ * crawlers — see the full page, not an empty root div.
+ */
+export interface Props {
+  title: string;
+  description: string;
+  /** Absolute or root-relative path to the social preview image. */
+  image?: string;
+  /** Set true on pages that should not be indexed (drafts, thank-you pages). */
+  noindex?: boolean;
+}
+
+const { title, description, image = '/images/og-default.png', noindex = false } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(image, Astro.site).href;
+
+// Organization schema is what search engines and AI assistants read to build a
+// knowledge panel or answer "what is BioClarity AI". Keep sameAs accurate —
+// wrong or dead profile links dilute entity matching.
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'BioClarity AI',
+  legalName: 'BioClarity AI Inc.',
+  url: 'https://bioclarity.ai',
+  logo: new URL('/images/logo.png', Astro.site).href,
+  description:
+    'BioClarity AI builds the trust and validation layer for AI-driven science, making an AI model’s understanding of living systems verifiable from molecule to organism.',
+  sameAs: [
+    // TODO: confirm these before launch — a dead sameAs link weakens entity matching.
+    'https://www.linkedin.com/company/bioclarity-ai',
+  ],
+};
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BioClarity AI" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+
+    <!-- The latin subset covers the visible copy; preloading it removes a
+         render-blocking round trip on the largest text (the h1). -->
+    <link
+      rel="preload"
+      href="/fonts/archivo-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify(organizationSchema)}
+    />
+
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
