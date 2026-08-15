@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -Eq 'git([[:space:]]+-{1,2}[A-Za-z][A-Za-z-]*([[:space:]]+[^[:space:]-][^[:space:]]*)?)*[[:space:]]+(commit|push)([[:space:]]|$)' && printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Blocked by .claude/settings.json. Pushing this repo deploys to bioclarity.ai, so commits and pushes are never automatic here. Leave the work in the working tree, say what changed, and let the user run the command. See AGENTS.md.\"}}' || true",
+            "timeout": 10,
+            "statusMessage": "Checking for git commit/push"
+          }
+        ]
+      }
+    ]
+  }
+}
