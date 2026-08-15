@@ -1,0 +1,11 @@
+{
+  "_readme": "Runtime settings for bioclarity.ai. Retune values here instead of editing source. Loaded by src/scripts/settings.ts on every page load; any key that is missing or malformed falls back to the defaults compiled into the consuming module, so a broken file here degrades gracefully rather than breaking the site. Add new top-level sections as siblings of \"emergence\".",
+
+  "emergence": {
+    "speed": 1.3,
+    "holdTime": 3.8,
+    "linkStrength": 1,
+    "mouseForce": 0.5,
+    "mono": false
+  }
+}

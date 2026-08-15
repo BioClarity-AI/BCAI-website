@@ -4,8 +4,9 @@
  * illustrates is also stated in the copy beside it — so it carries aria-hidden
  * and the page reads correctly without it.
  *
- * Animation parameters ride on data attributes so they can be retuned without
- * touching the script.
+ * Animation parameters come from public/settings.json at runtime. Passing a
+ * prop here pins that one value and opts it out of the settings file — use it
+ * for a one-off instance, not for tuning the hero.
  */
 interface Props {
   speed?: number;
@@ -15,23 +16,23 @@ interface Props {
   mono?: boolean;
 }
 
-const {
-  speed = 1.3,
-  holdTime = 3.8,
-  linkStrength = 1,
-  mouseForce = 0.5,
-  mono = false,
-} = Astro.props;
+// Deliberately no defaults: an omitted prop must leave its data attribute off
+// the element entirely, otherwise it would pin the value and settings.json
+// could never take effect.
+const { speed, holdTime, linkStrength, mouseForce, mono } = Astro.props;
+
+const attr = (value: number | boolean | undefined) =>
+  value === undefined ? undefined : String(value);
 ---
 
 <div
   class="emergence"
   data-emergence
-  data-speed={String(speed)}
-  data-hold-time={String(holdTime)}
-  data-link-strength={String(linkStrength)}
-  data-mouse-force={String(mouseForce)}
-  data-mono={String(mono)}
+  data-speed={attr(speed)}
+  data-hold-time={attr(holdTime)}
+  data-link-strength={attr(linkStrength)}
+  data-mouse-force={attr(mouseForce)}
+  data-mono={attr(mono)}
 >
   <canvas data-canvas aria-hidden="true"></canvas>
 
@@ -152,8 +153,18 @@ const {
 
 <script>
   import { initEmergence } from '../scripts/emergence';
+  import { loadSettings } from '../scripts/settings';
 
-  document
-    .querySelectorAll<HTMLElement>('[data-emergence]')
-    .forEach((el) => initEmergence(el));
+  // Start on the compiled-in defaults so the hero never waits on a network
+  // round trip, then retune in place once settings.json lands. Restarting
+  // instead of updating would visibly reset the formation mid-cycle.
+  const handles = [...document.querySelectorAll<HTMLElement>('[data-emergence]')].map(
+    (el) => initEmergence(el),
+  );
+
+  if (handles.length) {
+    loadSettings().then(({ emergence }) => {
+      if (emergence) handles.forEach((handle) => handle.update(emergence));
+    });
+  }
 </script>

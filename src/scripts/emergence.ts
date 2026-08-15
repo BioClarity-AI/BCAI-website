@@ -24,13 +24,31 @@ export interface EmergenceOptions {
   mono: boolean;
 }
 
-const DEFAULTS: EmergenceOptions = {
+/**
+ * Compiled-in fallbacks — the single source of truth for these values.
+ * `public/settings.json` overrides them at runtime; this is what renders if
+ * that file is missing, unreachable, or malformed.
+ */
+export const DEFAULTS: EmergenceOptions = {
   speed: 1.3,
   holdTime: 3.8,
   linkStrength: 1,
   mouseForce: 0.5,
   mono: false,
 };
+
+/** The tunable keys, in one place so the readers below stay in sync. */
+const NUMERIC_KEYS = ['speed', 'holdTime', 'linkStrength', 'mouseForce'] as const;
+
+export interface EmergenceHandle {
+  /**
+   * Retune a running simulation. Keys pinned by an explicit `data-*` attribute
+   * are ignored, so a value set on the component always beats settings.json.
+   */
+  update(next: Partial<EmergenceOptions>): void;
+  /** Stop the loop and remove every listener. */
+  destroy(): void;
+}
 
 const SHAPES = [
   'separate', 'converge', 'molecular', 'dna', 'protein',
@@ -82,16 +100,26 @@ function readOptions(el: HTMLElement): EmergenceOptions {
     holdTime: num('holdTime', DEFAULTS.holdTime),
     linkStrength: num('linkStrength', DEFAULTS.linkStrength),
     mouseForce: num('mouseForce', DEFAULTS.mouseForce),
-    mono: el.dataset.mono === 'true',
+    mono: el.dataset.mono != null ? el.dataset.mono === 'true' : DEFAULTS.mono,
   };
 }
 
-export function initEmergence(root: HTMLElement): () => void {
+/**
+ * Keys given explicitly as `data-*` on the element. These were authored on the
+ * component deliberately, so settings.json must not overwrite them.
+ */
+function pinnedKeys(el: HTMLElement): Set<keyof EmergenceOptions> {
+  const keys: (keyof EmergenceOptions)[] = [...NUMERIC_KEYS, 'mono'];
+  return new Set(keys.filter((key) => el.dataset[key] != null));
+}
+
+export function initEmergence(root: HTMLElement): EmergenceHandle {
   const canvas = root.querySelector<HTMLCanvasElement>('[data-canvas]');
   const ctx = canvas?.getContext('2d');
-  if (!canvas || !ctx) return () => {};
+  if (!canvas || !ctx) return { update() {}, destroy() {} };
 
   const opts = readOptions(root);
+  const pinned = pinnedKeys(root);
   const readoutEl = root.querySelector<HTMLElement>('[data-readout]');
   const lockBtn = root.querySelector<HTMLButtonElement>('[data-lock]');
   const lockDot = root.querySelector<HTMLElement>('[data-lock-dot]');
@@ -154,6 +182,13 @@ export function initEmergence(root: HTMLElement): () => void {
   let hold = opts.holdTime;
   let slot = hold + TRANS;
   let loop = slot * n;
+  // holdTime is the only option the loop caches rather than reading per frame,
+  // so a retune has to recompute the cycle it derives.
+  const applyTiming = () => {
+    hold = opts.holdTime;
+    slot = hold + TRANS;
+    loop = slot * n;
+  };
   let tPhase = 0;
   const smooth = (x: number) => x * x * (3 - 2 * x);
 
@@ -564,15 +599,27 @@ export function initEmergence(root: HTMLElement): () => void {
   const onVisibility = () => setRunning(!document.hidden);
   document.addEventListener('visibilitychange', onVisibility);
 
-  return () => {
-    cancelAnimationFrame(raf);
-    running = false;
-    ro.disconnect();
-    io.disconnect();
-    window.removeEventListener('pointermove', onMove);
-    canvas.removeEventListener('pointerleave', onLeave);
-    parent.removeEventListener('wheel', onWheel);
-    document.removeEventListener('visibilitychange', onVisibility);
-    window.clearTimeout(wheelT);
+  return {
+    update(next) {
+      for (const key of NUMERIC_KEYS) {
+        const value = next[key];
+        if (pinned.has(key)) continue;
+        if (typeof value === 'number' && Number.isFinite(value)) opts[key] = value;
+      }
+      if (!pinned.has('mono') && typeof next.mono === 'boolean') opts.mono = next.mono;
+      applyTiming();
+    },
+
+    destroy() {
+      cancelAnimationFrame(raf);
+      running = false;
+      ro.disconnect();
+      io.disconnect();
+      window.removeEventListener('pointermove', onMove);
+      canvas.removeEventListener('pointerleave', onLeave);
+      parent.removeEventListener('wheel', onWheel);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.clearTimeout(wheelT);
+    },
   };
 }
