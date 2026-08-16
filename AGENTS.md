@@ -1,24 +1,25 @@
 # Working in this repo
 
-## Never commit or push on your own
+## Never push on your own
 
-Do not run `git commit` or `git push` unless the user asks for it **in that
-message**. Staging with `git add` is fine; creating the commit is not.
+Do not run `git push` unless the user asks for it **in that message**.
+Committing is fine — commit finished work rather than leaving it loose.
 
 This is not a style preference. `.github/workflows/deploy.yml` deploys on every
 push to `main`, so a push here publishes to bioclarity.ai immediately — there is
 no staging environment and no review step between the push and the live site.
+A commit is local and reversible; a push is the publish.
 
-Standing permission does not carry over. "Commit and push" granted for one
-change authorises that change only; the next one needs asking again.
+Standing permission does not carry over. "Push" granted for one change
+authorises that change only; the next one needs asking again.
 
-A `PreToolUse` hook in `.claude/settings.json` blocks both commands, so an
-attempt fails with a message rather than going through. The hook is the
-backstop, not the rule — do not work around it, and do not edit or disable it
-to get a commit through. If a commit is genuinely wanted, the user will say so,
-and they can run the command themselves or lift the hook.
+A `PreToolUse` hook in `.claude/settings.json` blocks the push, so an attempt
+fails with a message rather than going through. The hook is the backstop, not
+the rule — do not work around it, and do not edit or disable it to get a push
+through. If a push is genuinely wanted, the user will say so, and they can run
+the command themselves.
 
-Leave finished work in the working tree and say what changed. That is the
+Leave the work committed on the branch and say what changed. That is the
 hand-off.
 
 ## Checks before handing work back
