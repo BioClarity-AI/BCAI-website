@@ -4,11 +4,11 @@
  *
  * Each scene argues its service rather than decorating it: candidates are
  * screened on whether they change a decision, vendor rankings are re-run on
- * your data, everything a lab produces settles into a foundation, and evidence
- * accumulates until a gate resolves.
+ * your data, a product is fabricated out of the client's own material, and
+ * evidence accumulates until a gate resolves.
  */
 
-import { initScenePanel, type Scene, type Stage } from './scenePanel';
+import { initScenePanel, type Scene } from './scenePanel';
 import { applySettings } from './settings';
 
 /** Tunable from the `services` section of public/settings.json. */
@@ -21,8 +21,8 @@ export interface ServicesOptions {
   adoptionSeconds: number;
   /** Seconds the vendor-benchmark scene runs. */
   validationSeconds: number;
-  /** Seconds the data-foundation scene runs. */
-  foundationSeconds: number;
+  /** Seconds the fabrication scene runs. One full run prints both objects. */
+  productsSeconds: number;
   /** Seconds the portfolio-gate scene runs. */
   portfolioSeconds: number;
 }
@@ -37,7 +37,7 @@ export const SERVICES_DEFAULTS: ServicesOptions = {
   mono: false,
   adoptionSeconds: 16.5,
   validationSeconds: 10.6,
-  foundationSeconds: 12,
+  productsSeconds: 24,
   portfolioSeconds: 11.9,
 };
 
@@ -381,472 +381,246 @@ function validationScene(): Scene {
 }
 
 /* ── SCENE 3 · AI & data products ───────────────────────────────────────────
-   A basin. Everything a lab produces rains into it — sequences, assays, and the
-   sessions and insights a scientist marks while working with an agent — and
-   settles as strata. The foundation deepens, and what rises back out of it is
-   the next partner. */
+   Fabrication. A solid is printed layer by layer out of the client's own
+   material: a head sweeps each layer, deposits cool from accent to ink, and the
+   finished object turns once. Then it breaks apart and the same material
+   re-forms as a different object — same foundation, product shaped to you,
+   rebuildable rather than fixed.
 
-type Glyph = 'sequencer' | 'dna' | 'plate' | 'well' | 'session' | 'analysis' | 'check' | 'manuscript' | 'page';
+   Real perspective: a voxel world, orbited by a camera, depth-sorted back to
+   front, faces shaded by normal so the solid reads as a solid. */
 
-/** inlet: [label, validated, source glyph, falling glyph] */
-const INLETS: readonly [string, boolean, Glyph, Glyph][] = [
-  ['SEQUENCES', false, 'sequencer', 'dna'],
-  ['ASSAYS', false, 'plate', 'well'],
-  ['CHAT SESSIONS', false, 'session', 'analysis'],
-  ['INSIGHTS', true, 'check', 'check'],
-  ['LITERATURE', false, 'manuscript', 'page'],
-];
+/** Two silhouettes, built from the same material, over a GRID × GRID plate. */
+const GRID = 11;
 
-// Stratum names diverge from the inlets: a chat session settles as the analysis
-// it produced; an expert's mark turns analysis into insight.
-const BANDS = ['SEQUENCES', 'ASSAYS', 'GEN AI ANALYSIS', 'EXPERT-MARKED INSIGHTS', 'LITERATURE'];
-
-/** Marks drawn from primitives, in the system's own vocabulary: no icon font. */
-function glyph(s: Stage, kind: Glyph, cx: number, cy: number, r: number, color: string, lw?: number): void {
-  const { ctx } = s;
-  ctx.save();
-  ctx.strokeStyle = color;
-  ctx.fillStyle = color;
-  ctx.lineWidth = lw || 1.5;
-  ctx.lineJoin = 'miter';
-  ctx.lineCap = 'butt';
-
-  if (kind === 'sequencer') {
-    // Vented tower at left, two-door chamber, angled screen.
-    ctx.lineWidth = lw || 1.4;
-    ctx.beginPath();
-    ctx.moveTo(cx - r * 0.16, cy - r * 0.52);
-    ctx.lineTo(cx + r * 0.98, cy - r * 0.98);
-    ctx.lineTo(cx + r * 0.98, cy - r * 0.3);
-    ctx.lineTo(cx - r * 0.16, cy - r * 0.1);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.strokeRect(cx - r, cy - r * 0.5, r * 0.52, r * 1.42);
-    for (let i = 0; i < 3; i++) ctx.fillRect(cx - r * 0.92, cy - r * 0.34 + i * r * 0.2, r * 0.34, 1.2);
-    ctx.save();
-    ctx.globalAlpha = 0.9;
-    ctx.fillRect(cx - r * 0.48, cy - r * 0.12, r * 1.46, r * 1.04);
-    ctx.restore();
-    ctx.save();
-    ctx.strokeStyle = s.bg;
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(cx + r * 0.42, cy - r * 0.12);
-    ctx.lineTo(cx + r * 0.42, cy + r * 0.92);
-    ctx.stroke();
-    ctx.fillStyle = s.bg;
-    ctx.fillRect(cx - r * 0.38, cy - r * 0.03, 2.4, 2.4);
-    ctx.restore();
-    ctx.fillRect(cx - r * 0.82, cy + r * 0.92, r * 0.22, 1.6);
-    ctx.fillRect(cx + r * 0.7, cy + r * 0.96, r * 0.22, 1.6);
-  } else if (kind === 'dna') {
-    // The classic silhouette: two ribbons crossing twice, thin rungs in the
-    // open eyes — thick strands, thin rungs, nothing else.
-    const hh = r * 1.4;
-    const A = r * 0.55;
-    const X = (t: number) => Math.cos(t * Math.PI * 2) * A;
-    const Y = (t: number) => cy - hh + 2 * hh * t;
-    ctx.lineWidth = 1.6;
-    ctx.lineCap = 'round';
-    for (const dir of [1, -1]) {
-      ctx.beginPath();
-      for (let i = 0; i <= 30; i++) {
-        const t = i / 30;
-        if (i) ctx.lineTo(cx + X(t) * dir, Y(t));
-        else ctx.moveTo(cx + X(t) * dir, Y(t));
-      }
-      ctx.stroke();
-    }
-    ctx.lineWidth = 0.9;
-    for (let i = 0; i < 9; i++) {
-      const t = (i + 0.5) / 9;
-      const x = X(t);
-      if (Math.abs(x) < A * 0.5) continue;
-      ctx.beginPath();
-      ctx.moveTo(cx - x, Y(t));
-      ctx.lineTo(cx + x, Y(t));
-      ctx.stroke();
-    }
-  } else if (kind === 'plate') {
-    // 96-well microplate: clipped A1 corner, well grid, a few hits filled.
-    ctx.lineWidth = lw || 1.3;
-    const pw = r * 1.05;
-    const ph = r * 0.78;
-    const cut = r * 0.28;
-    ctx.beginPath();
-    ctx.moveTo(cx - pw + cut, cy - ph);
-    ctx.lineTo(cx + pw, cy - ph);
-    ctx.lineTo(cx + pw, cy + ph);
-    ctx.lineTo(cx - pw, cy + ph);
-    ctx.lineTo(cx - pw, cy - ph + cut);
-    ctx.closePath();
-    ctx.stroke();
-    const hits = [5, 6, 9];
-    for (let row = 0; row < 3; row++) {
-      for (let col = 0; col < 4; col++) {
-        const i = row * 4 + col;
-        const x = cx - pw + r * 0.42 + col * ((2 * pw - r * 0.84) / 3);
-        const y = cy - ph + r * 0.32 + row * ((2 * ph - r * 0.64) / 2);
-        ctx.beginPath();
-        ctx.arc(x, y, r * 0.13, 0, Math.PI * 2);
-        if (hits.includes(i)) ctx.fill();
-        else ctx.stroke();
-      }
-    }
-  } else if (kind === 'well') {
-    // A droplet: the sample going in.
-    const rb = r * 0.62;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - r);
-    ctx.quadraticCurveTo(cx + rb * 0.9, cy - rb * 0.1, cx + rb, cy + r * 0.3 - rb * 0.4);
-    ctx.arc(cx, cy + r * 0.3, rb, -0.15, Math.PI + 0.15);
-    ctx.quadraticCurveTo(cx - rb * 0.9, cy - rb * 0.1, cx, cy - r);
-    ctx.fill();
-  } else if (kind === 'session') {
-    // An expert and an AI agent, one bubble each, facing each other.
-    ctx.lineWidth = lw || 1.2;
-    const bw = r * 1.02;
-    const bh = r * 1.05;
-    ctx.beginPath();
-    ctx.moveTo(cx - r, cy - r);
-    ctx.lineTo(cx - r + bw, cy - r);
-    ctx.lineTo(cx - r + bw, cy - r + bh);
-    ctx.lineTo(cx - r + bw * 0.42, cy - r + bh);
-    ctx.lineTo(cx - r + bw * 0.22, cy - r + bh + bh * 0.36);
-    ctx.lineTo(cx - r + bw * 0.22, cy - r + bh);
-    ctx.lineTo(cx - r, cy - r + bh);
-    ctx.closePath();
-    ctx.stroke();
-    // The biologist: head and shoulders.
-    const hx = cx - r + bw / 2;
-    const hy = cy - r + bh * 0.38;
-    ctx.beginPath();
-    ctx.arc(hx, hy, r * 0.15, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(hx, hy + r * 0.42, r * 0.26, Math.PI, 0);
-    ctx.closePath();
-    ctx.fill();
-    // The agent's bubble, tail bottom-right, offset low.
-    const ox = cx + r * 0.02;
-    const oy = cy - r * 0.12;
-    ctx.beginPath();
-    ctx.moveTo(ox, oy);
-    ctx.lineTo(ox + bw, oy);
-    ctx.lineTo(ox + bw, oy + bh);
-    ctx.lineTo(ox + bw * 0.78, oy + bh);
-    ctx.lineTo(ox + bw * 0.78, oy + bh + bh * 0.36);
-    ctx.lineTo(ox + bw * 0.58, oy + bh);
-    ctx.lineTo(ox, oy + bh);
-    ctx.closePath();
-    ctx.stroke();
-    // The agent: a chip with pins.
-    const qx = ox + bw / 2;
-    const qy = oy + bh * 0.48;
-    const q = r * 0.26;
-    ctx.strokeRect(qx - q, qy - q, 2 * q, 2 * q);
-    ctx.fillRect(qx - 1, qy - 1, 2, 2);
-    for (const d of [-0.5, 0.5]) {
-      ctx.fillRect(qx + d * q - 0.6, qy - q - 2.4, 1.2, 2.4);
-      ctx.fillRect(qx + d * q - 0.6, qy + q, 1.2, 2.4);
-    }
-  } else if (kind === 'analysis') {
-    // What the session drops: a generated analysis — a page of results.
-    ctx.lineWidth = lw || 1.2;
-    const pw = r * 0.82;
-    const ph = r * 1.15;
-    ctx.strokeRect(cx - pw, cy - ph, 2 * pw, 2 * ph);
-    ctx.fillRect(cx - pw + 1.6, cy - ph + 1.8, 2 * pw - 3.2, 1.1);
-    [0.35, 0.72, 0.5].forEach((hv, i) => {
-      const bw2 = (2 * pw - 5) / 3;
-      ctx.fillRect(cx - pw + 1.8 + i * (bw2 + 0.8), cy + ph - 2 - ph * hv, bw2, ph * hv);
-    });
-  } else if (kind === 'check') {
-    ctx.lineWidth = lw || 2;
-    ctx.beginPath();
-    ctx.moveTo(cx - r, cy + 1);
-    ctx.lineTo(cx - r * 0.25, cy + r * 0.8);
-    ctx.lineTo(cx + r, cy - r * 0.9);
-    ctx.stroke();
-  } else {
-    const fold = r * 0.55;
-    ctx.beginPath();
-    ctx.moveTo(cx - r * 0.75, cy - r);
-    ctx.lineTo(cx + r * 0.75 - fold, cy - r);
-    ctx.lineTo(cx + r * 0.75, cy - r + fold);
-    ctx.lineTo(cx + r * 0.75, cy + r);
-    ctx.lineTo(cx - r * 0.75, cy + r);
-    ctx.closePath();
-    ctx.stroke();
-    if (kind === 'manuscript') {
-      for (let i = 0; i < 3; i++) {
-        ctx.fillRect(cx - r * 0.45, cy - r * 0.35 + i * (r * 0.45), r * (i === 2 ? 0.6 : 0.95), 1.3);
-      }
-    }
-  }
-  ctx.restore();
+/** Height maps, in voxel layers. 0 is nothing here. */
+/** A stepped massif, off-centre. */
+function shapeA(u: number, v: number): number {
+  const dx = u - 4.2;
+  const dy = v - 5.4;
+  const r = Math.sqrt(dx * dx + dy * dy);
+  return Math.max(0, Math.round(11 - r * 1.85 + Math.sin(u * 0.9) * 1.4 + Math.cos(v * 0.7) * 1.1));
 }
 
-const CAPTIONS: readonly [string, string][] = [
-  ['SEQUENCES, ASSAYS, SESSIONS —', 'EVERYTHING SETTLES INTO THE FOUNDATION'],
-  ['ANALYSIS AN EXPERT MARKS', 'BECOMES INSIGHT'],
-  ['THE FOUNDATION IS THE PRODUCT —', 'EVERY PARTNER STARTS FROM IT'],
-];
+/** A ring with a raised spine. */
+function shapeB(u: number, v: number): number {
+  const dx = u - 5;
+  const dy = v - 5;
+  const r = Math.sqrt(dx * dx + dy * dy);
+  const ring = 8 - Math.abs(r - 3.1) * 3.4;
+  const spine = v > 3.6 && v < 6.4 ? 6 - Math.abs(u - 5) * 0.8 : 0;
+  return Math.max(0, Math.round(Math.max(ring, spine)));
+}
 
-function foundationScene(): Scene {
+/**
+ * Phase boundaries in seconds: print → hold and turn → break apart → re-form as
+ * the other. Every one has to fit inside half the loop — the shape flips at
+ * FAB_LOOP / 2, so anything past that never plays.
+ */
+const FAB = { print: 7.2, hold: 8.8, fly: 11.4 };
+/** Seconds for a full run: two objects, half each. */
+const FAB_LOOP = 24;
+
+interface Voxel {
+  u: number;
+  v: number;
+  k: number;
+}
+
+function productsScene(): Scene {
   let t = 0;
-  let drops: { i: number; x: number; y: number; v: number }[] = [];
-  let mass: number[] = [];
-  let massT: number[] = [];
-  let next: number[] = [];
-  let flash: { x: number; y: number; a: number; hot: boolean }[] = [];
-  let splash: { x: number; y: number; vx: number; vy: number; a: number; hot: boolean }[] = [];
-  let pulse: { p: number }[] = [];
-  let nextPulse = 1.2;
+  let shape = 0;
+  let cells: Voxel[] = [];
+  let perLayer: number[] = [];
+  let top = 1;
+
+  const build = (height: (u: number, v: number) => number) => {
+    cells = [];
+    top = 1;
+    for (let u = 0; u < GRID; u++) {
+      for (let v = 0; v < GRID; v++) {
+        const hh = height(u, v);
+        for (let k = 0; k < hh; k++) cells.push({ u, v, k });
+        if (hh > top) top = hh;
+      }
+    }
+    // Deposition order is by layer, then by the head's sweep across it.
+    cells.sort((a, b) => a.k - b.k || (a.k % 2 ? -1 : 1) * (a.u - b.u) || a.v - b.v);
+    perLayer = [];
+    for (let k = 0; k < top; k++) perLayer[k] = cells.filter((c) => c.k === k).length;
+  };
 
   const reset = () => {
     t = 0;
-    drops = [];
-    flash = [];
-    splash = [];
-    pulse = [];
-    nextPulse = 1.2;
-    mass = [2.2, 1.9, 1.5, 1.1, 1.7];
-    massT = mass.slice();
-    next = INLETS.map((_, i) => 0.2 + i * 0.19);
+    shape = 0;
+    build(shapeA);
   };
 
   return {
     label: 'AI & DATA PRODUCTS',
-    duration: 12,
+    duration: FAB_LOOP,
     reset,
     draw(dt, s) {
       const { ctx } = s;
       t += dt;
-      const sx0 = s.x0;
-      const sx1 = s.x1;
-      const sw = sx1 - sx0;
-      const bottom = s.y1 - 18;
-      // A phone held sideways: the inlets normally hang above the box, which
-      // there puts them under the overlay, and the strata are left a few
-      // pixels to share. Bring the inlets inside and start the basin higher.
-      const short = s.h < 420;
-      const inletY = short ? s.y0 + 14 : s.y0 - 31;
-      const basinTop = short ? s.y0 + 42 : s.y0 + (s.y1 - s.y0) * 0.44;
-      const H = Math.max(40, bottom - basinTop);
 
-      // Strata thicken by slow creep, never by a step — a landing must not
-      // nudge the whole basin.
-      mass.forEach((m, i) => {
-        mass[i] = m + (massT[i]! - m) * Math.min(1, dt * 0.3);
-      });
-      const total = mass.reduce((a, b) => a + b, 0);
-      const k = H / total;
+      // The second half of the loop prints the other silhouette.
+      const half = FAB_LOOP / 2;
+      const wanted = t >= half ? 1 : 0;
+      if (wanted !== shape) {
+        shape = wanted;
+        build(wanted ? shapeB : shapeA);
+      }
+      if (t > FAB_LOOP) {
+        reset();
+        return;
+      }
+      const lt = t - (wanted ? half : 0); // local time within this object
 
-      // Band 0 sits on the floor; each band's top is the sum below it. The
-      // accent seam is the point of the scene: never let it render thinner than
-      // its label needs.
-      const MIN_SEAM = 20;
-      const th = (i: number) => (i === 3 ? Math.max(MIN_SEAM, mass[i]! * k) : mass[i]! * k);
-      const bandTop = (i: number) => {
-        let below = 0;
-        for (let j = 0; j < i; j++) below += th(j);
-        return bottom - below - th(i);
+      // Camera: slow orbit, fixed tilt.
+      const spin = 0.55 + t * 0.16 + (lt > FAB.print ? (lt - FAB.print) * 0.34 : 0);
+      const tilt = 0.62;
+      const cx = (s.x0 + s.x1) / 2;
+      const cy = (s.y0 + s.y1) / 2;
+      const room = Math.min((s.x1 - s.x0) / 13.5, (s.y1 - s.y0) / 15);
+      const vox = Math.max(9, Math.min(24, room)); // voxel size in px
+      const sinA = Math.sin(spin);
+      const cosA = Math.cos(spin);
+      const proj = (u: number, v: number, k: number) => {
+        const ux = (u - (GRID - 1) / 2) * vox;
+        const vy = (v - (GRID - 1) / 2) * vox;
+        const rx = ux * cosA - vy * sinA;
+        const ry = ux * sinA + vy * cosA;
+        // ry doubles as the painter's-sort depth.
+        return { x: cx + rx, y: cy + ry * tilt - k * vox * 0.82 + vox * 2.4, d: ry - k * 0.6 };
       };
 
-      const railX = sx0 + Math.min(190, sw * 0.3);
-      const colSpan = sx1 - railX - 10;
-      const colX = (i: number) => railX + 18 + (colSpan - 26) * (i / (INLETS.length - 1));
-
-      // Inlets.
-      const slotW = colSpan / INLETS.length;
-      // Their names need a row of their own, which a short panel has not got.
-      const showNames = !short && INLETS.every(([n]) => s.mText(n, 9, 800, '0.1em') < slotW - 6);
-      INLETS.forEach(([name, hot, kind], i) => {
-        const x = colX(i);
-        const col = hot ? s.acc : s.dim;
-        glyph(s, kind, x, inletY, kind === 'session' ? 11 : 10, col, hot ? 2 : 1.5);
-        if (hot) {
-          ctx.save();
-          ctx.strokeStyle = s.acc;
-          ctx.lineWidth = 1.5;
-          ctx.strokeRect(x - 14, inletY - 14, 28, 28);
-          ctx.restore();
-        }
-        if (showNames) s.ctext(name, x, inletY + 23, 9, col, 800, '0.1em');
-        if (t > next[i]!) {
-          drops.push({ i, x: x + (Math.random() - 0.5) * 12, y: inletY + 16, v: 8 + Math.random() * 12 });
-          next[i] = t + 1.1 + Math.random() * 1.4;
-        }
-      });
-
-      // Rain.
-      const surfaceY = bandTop(INLETS.length - 1);
-      for (let d = drops.length - 1; d >= 0; d--) {
-        const p = drops[d]!;
-        p.v += 150 * dt;
-        p.y += p.v * dt;
-        // Settle a third of the way into its own stratum, not on the seam above.
-        const land = bandTop(p.i) + Math.min(9, mass[p.i]! * k * 0.38);
-        if (p.y >= land) {
-          massT[p.i] = (massT[p.i] ?? 0) + 0.1;
-          const hot = INLETS[p.i]![1];
-          flash.push({ x: p.x, y: land, a: 1, hot });
-          for (let q = 0; q < 5; q++) {
-            splash.push({
-              x: p.x,
-              y: land,
-              hot,
-              vx: (Math.random() - 0.5) * 90,
-              vy: -(30 + Math.random() * 65),
-              a: 1,
-            });
-          }
-          drops.splice(d, 1);
-          continue;
-        }
-        const hot = INLETS[p.i]![1];
-        const sunk = p.y > surfaceY;
-        ctx.save();
-        ctx.globalAlpha = sunk ? 0.12 : 0.25;
-        ctx.fillStyle = hot ? s.acc : s.ink;
-        ctx.fillRect(p.x - 0.5, p.y - 14, 1, 12);
-        ctx.restore();
-        ctx.save();
-        ctx.globalAlpha = (hot ? 1 : 0.9) * (sunk ? 0.4 : 1);
-        const falling = INLETS[p.i]![3];
-        glyph(
-          s,
-          falling,
-          p.x,
-          p.y,
-          falling === 'dna' ? 8 : falling === 'well' ? 5.5 : hot ? 5 : 4.5,
-          hot ? s.acc : s.ink,
-          hot ? 2 : 1.2,
-        );
-        ctx.restore();
-      }
-
-      // Strata.
-      mass.forEach((_, i) => {
-        const y = bandTop(i);
-        const bth = th(i);
-        const hot = INLETS[i]![1];
-        ctx.save();
-        ctx.fillStyle = hot ? s.acc : s.ink;
-        ctx.globalAlpha = hot ? 0.9 : 0.2 + 0.11 * (mass.length - i);
-        ctx.fillRect(sx0, y, sw, Math.max(1, bth - 1));
-        ctx.restore();
-        // Gate on fit, not viewport class — the bands span the whole panel.
-        const name = BANDS[i]!;
-        // Thin bands push their label outside, and five of those stack into an
-        // unreadable pile. On a short panel only the accent band — the point of
-        // the scene — keeps its label.
-        if ((!short || hot) && s.mText(name, 9, 800, '0.14em') < sw - 24) {
-          const inside = bth > 15;
-          const on = inside ? s.n100 : hot ? s.acc : s.dim;
-          const ly = inside ? y + bth / 2 + 3 : y - 5;
-          s.rtxt(name, sx1 - 10, ly, 9, on, 800, '0.14em');
-          if (hot) glyph(s, 'check', sx1 - 22 - s.mText(name, 9, 800, '0.14em'), ly - 4, 5, on, 2);
-        }
-      });
-      s.line(sx0, bottom + 3, sx1, bottom + 3, s.rule, 2);
-
-      // Splash ejecta.
-      for (let e = splash.length - 1; e >= 0; e--) {
-        const sp = splash[e]!;
-        sp.vy += 340 * dt;
-        sp.x += sp.vx * dt;
-        sp.y += sp.vy * dt;
-        sp.a -= dt * 1.9;
-        if (sp.a <= 0) {
-          splash.splice(e, 1);
-          continue;
-        }
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, sp.a);
-        ctx.fillStyle = sp.hot ? s.acc : s.ink;
-        ctx.fillRect(sp.x - 1.2, sp.y - 1.2, 2.4, 2.4);
-        ctx.restore();
-      }
-
-      // Absorption flashes.
-      for (let f = flash.length - 1; f >= 0; f--) {
-        const fl = flash[f]!;
-        fl.a -= dt * 3;
-        if (fl.a <= 0) {
-          flash.splice(f, 1);
-          continue;
-        }
-        ctx.save();
-        ctx.globalAlpha = fl.a;
-        ctx.strokeStyle = fl.hot ? s.acc : s.ink;
-        ctx.lineWidth = 1;
-        const r = (1 - fl.a) * 14;
-        ctx.beginPath();
-        ctx.moveTo(fl.x - r, fl.y);
-        ctx.lineTo(fl.x + r, fl.y);
-        ctx.stroke();
-        ctx.restore();
-      }
-
-      // What rises back out: a partner built on the whole basin. The cell scales
-      // to the room left of the inlet columns, down to phones.
-      const cellAvail = Math.max(54, Math.min(railX - sx0 - 12, sw - 12));
-      const needW = s.mText('DATA FOUNDATION', 11, 800, '0.14em') + 24;
-      const cScale = Math.min(1, cellAvail / needW);
-      const f1 = Math.max(7, 11 * cScale);
-      const cellW = Math.min(needW, cellAvail);
-      const cellH = Math.max(24, 38 * cScale);
-      const pad = Math.max(6, 12 * cScale);
-      const cellX = sx0;
-      // Normally the cell sits above the basin. On a short panel the basin
-      // starts too high for that, so it moves to the empty ground left of the
-      // inlet columns, on their row — the riser reaches the basin either way.
-      const cellY = short ? Math.max(s.y0, inletY - 16) : Math.max(s.y0 - 4, basinTop - cellH - 46);
+      // Build plate.
       ctx.save();
-      ctx.strokeStyle = s.acc;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(cellX, cellY, cellW, cellH);
-      ctx.restore();
-      s.txt('DATA FOUNDATION', cellX + pad, cellY + cellH * 0.62, f1, s.acc, 800, '0.14em');
-
-      const riseX = cellX + cellW / 2;
-      const hotTop = bandTop(3) + th(3) / 2;
-      s.line(riseX, cellY + cellH, riseX, hotTop, s.acc, 1, [4, 4]);
-      if (t > nextPulse) {
-        pulse.push({ p: 0 });
-        nextPulse = t + 1.15;
+      ctx.globalAlpha = 0.5;
+      for (let i = 0; i <= GRID; i++) {
+        const a = proj(i - 0.5, -0.5, 0);
+        const b = proj(i - 0.5, GRID - 0.5, 0);
+        const c = proj(-0.5, i - 0.5, 0);
+        const e = proj(GRID - 0.5, i - 0.5, 0);
+        s.line(a.x, a.y, b.x, b.y, s.dim, i % 5 === 0 ? 1 : 0.5);
+        s.line(c.x, c.y, e.x, e.y, s.dim, i % 5 === 0 ? 1 : 0.5);
       }
-      for (let q = pulse.length - 1; q >= 0; q--) {
-        const pu = pulse[q]!;
-        pu.p += dt / 1.5;
-        if (pu.p >= 1) {
-          pulse.splice(q, 1);
-          continue;
+      ctx.restore();
+
+      // How much has been deposited.
+      const printP = s.clamp01(lt / FAB.print);
+      const madeN = Math.floor(printP * cells.length);
+      const headCell = cells[Math.min(madeN, cells.length - 1)];
+      const headK = headCell ? headCell.k : top;
+
+      // Break-apart progress for the outgoing object.
+      const flyP = s.ease(s.clamp01((lt - FAB.hold) / (FAB.fly - FAB.hold)));
+
+      const drawn: { x: number; y: number; d: number; cell: Voxel; age: number; alpha: number }[] = [];
+      for (let i = 0; i < madeN; i++) {
+        const c = cells[i]!;
+        const age = (printP * cells.length - i) / Math.max(1, perLayer[c.k]! * 0.9);
+        let du = 0;
+        let dv = 0;
+        let dk = 0;
+        let alpha = 1;
+        if (flyP > 0) {
+          // Scatter, then out.
+          const seed = ((c.u * 37 + c.v * 91 + c.k * 13) % 100) / 100;
+          const dir = seed * 6.28;
+          du = Math.cos(dir) * flyP * 7;
+          dv = Math.sin(dir) * flyP * 7;
+          dk = (seed - 0.35) * flyP * 9;
+          alpha = 1 - flyP;
         }
-        const y = s.lerp(hotTop, cellY + cellH, s.ease(pu.p));
+        const p = proj(c.u + du, c.v + dv, c.k + dk);
+        drawn.push({ ...p, cell: c, age, alpha });
+      }
+      drawn.sort((a, b) => a.d - b.d);
+
+      const halfVox = vox / 2;
+      for (const it of drawn) {
+        // Fresh deposits glow accent and cool to ink.
+        const fresh = s.clamp01(1 - it.age);
+        const hot = fresh > 0.02;
+        const shade =
+          0.42 + 0.5 * ((it.cell.k / Math.max(1, top)) * 0.5 + (Math.sin(spin + it.cell.u * 0.3) + 1) / 4);
         ctx.save();
-        ctx.fillStyle = s.acc;
-        ctx.globalAlpha = 1 - pu.p * 0.4;
-        ctx.fillRect(riseX - 3, y - 3, 6, 6);
+        ctx.fillStyle = hot ? s.acc : s.ink;
+        // Top face.
+        ctx.globalAlpha = it.alpha * (hot ? 1 : 0.16 + 0.5 * shade);
+        ctx.beginPath();
+        ctx.moveTo(it.x, it.y - halfVox * tilt);
+        ctx.lineTo(it.x + halfVox, it.y);
+        ctx.lineTo(it.x, it.y + halfVox * tilt);
+        ctx.lineTo(it.x - halfVox, it.y);
+        ctx.closePath();
+        ctx.fill();
+        // One side face, for body.
+        ctx.globalAlpha = it.alpha * (hot ? 0.8 : 0.1 + 0.34 * shade);
+        ctx.beginPath();
+        ctx.moveTo(it.x + halfVox, it.y);
+        ctx.lineTo(it.x + halfVox, it.y + vox * 0.5);
+        ctx.lineTo(it.x, it.y + halfVox * tilt + vox * 0.5);
+        ctx.lineTo(it.x, it.y + halfVox * tilt);
+        ctx.closePath();
+        ctx.fill();
         ctx.restore();
       }
 
-      const ci = Math.floor(t / 4) % 3;
-      const caption = CAPTIONS[ci]!;
-      const col = ci === 1 ? s.acc : s.ink;
-      // Wrap to two lines when the single line would run past the panel.
-      const one = caption.join(' ');
-      // Short panels have no room to spend below the basin: the two-line form
-      // sits closer in, or its second line runs off the bottom edge.
-      const capFs = short ? 10 : 12;
-      if (s.mText(one, capFs, 800, '0.14em') < sx1 - s.x0) {
-        s.txt(one, s.x0, bottom + (short ? 26 : 34), capFs, col, 800, '0.14em');
-      } else {
-        s.txt(caption[0], s.x0, bottom + (short ? 22 : 30), capFs, col, 800, '0.14em');
-        s.txt(caption[1], s.x0, bottom + (short ? 37 : 48), capFs, col, 800, '0.14em');
+      // The print head: a bright plane sweeping the current layer.
+      if (printP < 1 && flyP === 0) {
+        const hp = proj(headCell ? headCell.u : 0, headCell ? headCell.v : 0, headK);
+        const a = proj(-0.5, -0.5, headK);
+        const b = proj(GRID - 0.5, -0.5, headK);
+        const c = proj(GRID - 0.5, GRID - 0.5, headK);
+        const e = proj(-0.5, GRID - 0.5, headK);
+        ctx.save();
+        ctx.strokeStyle = s.acc;
+        ctx.lineWidth = 1.5;
+        ctx.globalAlpha = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.lineTo(c.x, c.y);
+        ctx.lineTo(e.x, e.y);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = s.acc;
+        ctx.fillRect(hp.x - 3, hp.y - vox * 1.5, 6, vox * 1.2); // nozzle
+        ctx.fillRect(hp.x - 5, hp.y - vox * 1.6 - 5, 10, 6);
+        ctx.restore();
       }
+
+      // Readouts.
+      s.txt(
+        `${shape ? 'BUILD 02' : 'BUILD 01'} — LAYER ${Math.min(headK + 1, top)}/${top}`,
+        s.x0,
+        s.y0 - 22,
+        10,
+        s.dim,
+        800,
+        '0.14em',
+      );
+      if (printP < 1) s.rtxt(`${Math.round(printP * 100)}%`, s.x1, s.y0 - 22, 10, s.acc, 800, '0.14em');
+      else if (flyP === 0) s.rtxt('COMPLETE', s.x1, s.y0 - 22, 10, s.acc, 800, '0.14em');
+
+      let cap: string;
+      let col = s.ink;
+      if (lt < FAB.print) {
+        cap = shape ? 'REBUILT AROUND WHAT CHANGED' : 'BUILT FROM YOUR OWN DATA';
+      } else if (lt < FAB.hold) {
+        cap = 'A PRODUCT SHAPED TO YOUR SCIENCE';
+      } else if (!shape) {
+        cap = 'SAME MATERIAL — REBUILT, NOT REPLACED';
+        col = s.acc;
+      } else {
+        cap = 'YOUR TEAMS KEEP BUILDING';
+        col = s.acc;
+      }
+      s.txt(cap, s.x0, s.y1 + 26, s.mText(cap, 12, 800, '0.14em') < s.x1 - s.x0 ? 12 : 10, col, 800, '0.14em');
     },
   };
 }
@@ -1003,7 +777,7 @@ export function initServices(root: HTMLElement): ServicesHandle {
   const opts: ServicesOptions = { ...SERVICES_DEFAULTS };
 
   const panel = initScenePanel(root, {
-    scenes: [adoptionScene(), validationScene(), foundationScene(), portfolioScene()],
+    scenes: [adoptionScene(), validationScene(), productsScene(), portfolioScene()],
     sectionAttr: 'data-svc',
     titleAttr: 'data-svc-title',
     hashPrefix: 'svc',
@@ -1020,7 +794,7 @@ export function initServices(root: HTMLElement): ServicesHandle {
     panel.update({
       speed: opts.speed,
       mono: opts.mono,
-      durations: [opts.adoptionSeconds, opts.validationSeconds, opts.foundationSeconds, opts.portfolioSeconds],
+      durations: [opts.adoptionSeconds, opts.validationSeconds, opts.productsSeconds, opts.portfolioSeconds],
     });
   push();
 

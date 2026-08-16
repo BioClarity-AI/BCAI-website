@@ -18,3 +18,7 @@ pnpm-debug.log*
 # macOS
 .DS_Store
 .gstack/
+
+# Local per-directory env (selects this repo's Claude Code profile)
+.envrc
+.direnv/

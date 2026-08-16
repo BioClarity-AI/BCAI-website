@@ -92,7 +92,7 @@ section per panel. Edit that file and reload — no rebuild, no deploy.
 | Section | Panel | Keys |
 | --- | --- | --- |
 | `emergence` | Landing hero | `speed`, `holdTime`, `linkStrength`, `mouseForce`, `mono` |
-| `services` | Services | `speed`, `mono`, `adoptionSeconds`, `validationSeconds`, `foundationSeconds`, `portfolioSeconds` |
+| `services` | Services | `speed`, `mono`, `adoptionSeconds`, `validationSeconds`, `productsSeconds`, `portfolioSeconds` |
 | `science` | Science | `speed`, `mono`, `platformSeconds`, `generalizabilitySeconds` |
 | `company` | Company | `speed`, `mono`, `loopSeconds` |
 | `requestAccess` | Request access | `speed`, `mono`, `loopSeconds` |
