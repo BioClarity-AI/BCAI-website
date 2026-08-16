@@ -50,7 +50,8 @@ src/
   scripts/
     canvasStage.ts   Shared plumbing: DPR-correct canvas, tokens, text and
                      line helpers, and a loop that pauses when unobserved
-    scenePanel.ts    Scene cycling, arrows, hold, hover and deep-link select
+    scenePanel.ts    Scene cycling, arrows, hold, hover, deep-link select, and
+                     the picker for a scene with competing builds
     emergence.ts     The hero particle simulation
     services.ts      Four service scenes
     science.ts       Two science scenes
@@ -118,6 +119,20 @@ Write a `Scene` (`label`, `duration`, `reset`, `draw`) in the page's script,
 add it to the list passed to `initScenePanel`, and add a matching
 `<section data-svc="N">` with a `data-svc-title="N"` heading. The panel wires up
 hover, arrows, hold, the readout and the deep link from those two attributes.
+
+### Competing builds of one scene
+
+A slot in that list can be a `SceneChoice` instead of a `Scene`: several
+`variants`, each a whole concept for the same section. The panel draws the
+picked one and adds lettered buttons to the stage overlay while that slot is on
+screen, so the concepts can be compared in place rather than in a branch. The
+services page uses this for `AI & Data Products` — `A` fabrication, `C` a kit of
+parts. Adding a concept is one more entry in `variants`.
+
+The pick is a runtime affordance, not a setting: it resets to the first variant
+on reload, and `settings.json` gives every variant of a slot the same duration
+so switching concept does not switch pacing. Once the choice is settled, drop
+the losing variant and the slot goes back to being a plain `Scene`.
 
 ## SEO checklist for new pages
 

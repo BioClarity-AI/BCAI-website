@@ -34,8 +34,37 @@ export interface Scene {
   draw(dt: number, s: Stage): void;
 }
 
+/** One competing build of a scene — a concept, not a variation in degree. */
+export interface SceneVariant {
+  /** Letter on the picker button. */
+  id: string;
+  /** Name of the concept, shown beside the buttons while it is picked. */
+  label: string;
+  /** One line on what it argues; the button's tooltip and accessible name. */
+  title: string;
+  scene: Scene;
+}
+
+/**
+ * A slot holding several competing builds of the same section. The panel draws
+ * the picked one and offers a chooser while the slot is on screen; adding a
+ * concept is one more entry in `variants`.
+ */
+export interface SceneChoice {
+  /** Shown in the readout — the section, not the concept. */
+  label: string;
+  variants: SceneVariant[];
+}
+
+/** A slot in the panel's list: one scene, or a choice between builds of it. */
+export type SceneEntry = Scene | SceneChoice;
+
+export function isChoice(entry: SceneEntry): entry is SceneChoice {
+  return 'variants' in entry;
+}
+
 export interface ScenePanelConfig extends LayoutSpec {
-  scenes: Scene[];
+  scenes: SceneEntry[];
   /** Attribute marking a section of copy: 'data-svc' or 'data-sci'. */
   sectionAttr: string;
   /** Attribute marking a section's heading, highlighted while its scene runs. */
@@ -72,7 +101,19 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
   const lockBtn = root.querySelector<HTMLButtonElement>('[data-lock]');
   const lockDot = root.querySelector<HTMLElement>('[data-lock-dot]');
   const lockLabel = root.querySelector<HTMLElement>('[data-lock-label]');
+  const variantBox = root.querySelector<HTMLElement>('[data-variants]');
+  const variantSep = root.querySelector<HTMLElement>('[data-variant-sep]');
   const copy = document.querySelector<HTMLElement>('[data-page-copy]');
+
+  /** Which build is picked in each slot; slots without a choice stay at 0. */
+  const picks = scenes.map(() => 0);
+  /** Every scene a slot can draw — one, or all of its competing builds. */
+  const buildsOf = (entry: SceneEntry): Scene[] => (isChoice(entry) ? entry.variants.map((v) => v.scene) : [entry]);
+  /** The scene a slot is drawing right now. */
+  const sceneAt = (i: number): Scene => {
+    const entry = scenes[i]!;
+    return isChoice(entry) ? entry.variants[picks[i]!]!.scene : entry;
+  };
 
   const titles = copy ? Array.from(copy.querySelectorAll<HTMLElement>(`[${config.titleAttr}]`)) : [];
 
@@ -88,6 +129,60 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
   let shown = -1;
   let trans: { to: number; p: number } | null = null;
 
+  /**
+   * The concept picker, drawn only while a slot that has one is on screen.
+   * Rebuilt on entry rather than kept around: it belongs to the slot, and the
+   * buttons are as many as that slot has builds.
+   */
+  let variantBtns: HTMLButtonElement[] = [];
+  let variantName: HTMLElement | null = null;
+
+  const pickVariant = (i: number) => {
+    const entry = scenes[idx]!;
+    if (!isChoice(entry) || i === picks[idx]) return;
+    picks[idx] = i;
+    entry.variants[i]!.scene.reset();
+    // Restart the clock too: a concept picked late in the slot's run would
+    // otherwise be cut off before it has made its case.
+    age = 0;
+    variantBtns.forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+    if (variantName) variantName.textContent = entry.variants[i]!.label;
+  };
+
+  const paintPicker = () => {
+    if (!variantBox) return;
+    const entry = scenes[idx]!;
+    const choice = isChoice(entry) && entry.variants.length > 1 ? entry : null;
+    variantBox.hidden = !choice;
+    if (variantSep) variantSep.hidden = !choice;
+    if (!choice) {
+      variantBox.replaceChildren();
+      variantBtns = [];
+      variantName = null;
+      return;
+    }
+
+    const picked = picks[idx]!;
+    const list = document.createElement('span');
+    list.className = 'variant-picks';
+    variantBtns = choice.variants.map((v, i) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = v.id;
+      button.title = `${v.label} — ${v.title}`;
+      button.setAttribute('aria-label', `${v.label} — ${v.title}`);
+      button.setAttribute('aria-pressed', String(i === picked));
+      button.addEventListener('click', () => pickVariant(i));
+      list.append(button);
+      return button;
+    });
+
+    variantName = document.createElement('span');
+    variantName.className = 'variant-name';
+    variantName.textContent = choice.variants[picked]!.label;
+    variantBox.replaceChildren(list, variantName);
+  };
+
   const show = (k: number) => {
     if (k === shown) return;
     shown = k;
@@ -95,6 +190,7 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
     titles.forEach((el, j) => {
       el.style.color = j === k ? 'var(--color-accent)' : '';
     });
+    paintPicker();
   };
 
   const paintLock = () => {
@@ -117,7 +213,7 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
     if (!trans && k !== idx) trans = { to: k, p: 0 };
   };
 
-  scenes.forEach((s) => s.reset());
+  scenes.forEach((entry) => buildsOf(entry).forEach((s) => s.reset()));
   show(0);
   paintLock();
 
@@ -135,20 +231,20 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
       if (trans.p >= 0.5 && idx !== trans.to) {
         idx = trans.to;
         age = 0;
-        scenes[idx]!.reset();
+        sceneAt(idx).reset();
         show(idx);
       }
       alpha = Math.abs(1 - 2 * Math.min(1, trans.p));
       if (trans.p >= 1) trans = null;
     } else {
       age += dt;
-      if (!held && age > scenes[idx]!.duration) trans = { to: (idx + 1) % scenes.length, p: 0 };
+      if (!held && age > sceneAt(idx).duration) trans = { to: (idx + 1) % scenes.length, p: 0 };
     }
 
     ctx.clearRect(0, 0, stage.w, stage.h);
     ctx.save();
     ctx.globalAlpha = Math.max(0.02, alpha);
-    scenes[idx]!.draw(dt, stage);
+    sceneAt(idx).draw(dt, stage);
     ctx.restore();
   });
 
@@ -202,9 +298,13 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
       if (typeof next.mono === 'boolean') mono = next.mono;
       if (Array.isArray(next.durations)) {
         next.durations.forEach((seconds, i) => {
-          const scene = scenes[i];
-          if (scene && typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0) {
-            scene.duration = seconds;
+          const entry = scenes[i];
+          if (entry && typeof seconds === 'number' && Number.isFinite(seconds) && seconds > 0) {
+            // Every build of a slot gets the tuned time, so switching concept
+            // does not switch pacing.
+            buildsOf(entry).forEach((scene) => {
+              scene.duration = seconds;
+            });
           }
         });
       }
@@ -219,6 +319,7 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
       nextBtn?.removeEventListener('click', onNext);
       lockBtn?.removeEventListener('click', onLock);
       hovers.forEach(({ el, handler }) => el.removeEventListener('mouseenter', handler));
+      variantBox?.replaceChildren();
     },
   };
 }

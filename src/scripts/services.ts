@@ -4,11 +4,15 @@
  *
  * Each scene argues its service rather than decorating it: candidates are
  * screened on whether they change a decision, vendor rankings are re-run on
- * your data, a product is fabricated out of the client's own material, and
- * evidence accumulates until a gate resolves.
+ * your data, a product is built out of the client's own material, and evidence
+ * accumulates until a gate resolves.
+ *
+ * The third slot is still being chosen between two competing builds —
+ * fabrication and a kit of parts — so it ships as a `SceneChoice` with a picker
+ * in the overlay rather than as a settled scene.
  */
 
-import { initScenePanel, type Scene } from './scenePanel';
+import { initScenePanel, type Scene, type SceneChoice } from './scenePanel';
 import { applySettings } from './settings';
 
 /** Tunable from the `services` section of public/settings.json. */
@@ -21,7 +25,7 @@ export interface ServicesOptions {
   adoptionSeconds: number;
   /** Seconds the vendor-benchmark scene runs. */
   validationSeconds: number;
-  /** Seconds the fabrication scene runs. One full run prints both objects. */
+  /** Seconds the products scene runs, whichever build is picked. */
   productsSeconds: number;
   /** Seconds the portfolio-gate scene runs. */
   portfolioSeconds: number;
@@ -427,7 +431,7 @@ interface Voxel {
   k: number;
 }
 
-function productsScene(): Scene {
+function fabricationScene(): Scene {
   let t = 0;
   let shape = 0;
   let cells: Voxel[] = [];
@@ -625,6 +629,263 @@ function productsScene(): Scene {
   };
 }
 
+
+/* ── SCENE 3 · alternative build: kit of parts ───────────────────────────────
+   Blocks fly in and snap together into a structure with visible joints, then
+   break down and rebuild as a different configuration from the same parts:
+   built around your workflows, not a platform's limits. Same camera as the
+   fabrication build — isometric, depth-sorted. */
+
+interface Part {
+  w: number;
+  d: number;
+  h: number;
+}
+
+/** The same eight parts, in module units, whichever way they are arranged. */
+const KIT: readonly Part[] = [
+  { w: 3, d: 3, h: 1 },
+  { w: 2, d: 3, h: 2 },
+  { w: 3, d: 2, h: 1 },
+  { w: 2, d: 2, h: 3 },
+  { w: 4, d: 2, h: 1 },
+  { w: 2, d: 4, h: 1 },
+  { w: 1, d: 3, h: 2 },
+  { w: 3, d: 1, h: 2 },
+];
+
+/** Where each part sits in each arrangement: [u, v, k] origin. */
+const LAYOUT_A: readonly [number, number, number][] = [
+  [0, 0, 0],
+  [3, 0, 0],
+  [0, 3, 0],
+  [3, 3, 0],
+  [0, 0, 1],
+  [5, 0, 1],
+  [3, 3, 2],
+  [0, 5, 2],
+];
+
+const LAYOUT_B: readonly [number, number, number][] = [
+  [2, 2, 0],
+  [0, 0, 0],
+  [2, 0, 1],
+  [5, 0, 0],
+  [0, 3, 1],
+  [2, 3, 2],
+  [6, 2, 1],
+  [0, 2, 3],
+];
+
+/** Phase boundaries in seconds, within one arrangement's half of the loop. */
+const KIT_IN = 3.6;
+const KIT_HOLD = 8.2;
+const KIT_OUT = 10.6;
+/** One full run assembles both arrangements, half each. */
+const KIT_HALF = 12;
+const KIT_LOOP = 24;
+
+interface Block {
+  part: Part;
+  u: number;
+  v: number;
+  k: number;
+  alpha: number;
+  settled: boolean;
+  depth: number;
+  /** Seconds since this part snapped into place; negative before it lands. */
+  sinceLanded: number;
+}
+
+function kitScene(): Scene {
+  let t = 0;
+  let config = 0;
+
+  const reset = () => {
+    t = 0;
+    config = 0;
+  };
+
+  return {
+    label: 'AI & DATA PRODUCTS',
+    duration: KIT_LOOP,
+    reset,
+    draw(dt, s) {
+      const { ctx } = s;
+      t += dt;
+      if (t > KIT_LOOP) t = 0;
+
+      // The second half of the loop rebuilds the same parts the other way.
+      config = t >= KIT_HALF ? 1 : 0;
+      const lt = t - (config ? KIT_HALF : 0); // local time within this arrangement
+      const layout = config ? LAYOUT_B : LAYOUT_A;
+
+      const spin = 0.62 + t * 0.11;
+      const tilt = 0.58;
+      const cx = (s.x0 + s.x1) / 2;
+      const cy = (s.y0 + s.y1) / 2;
+      const mod = Math.max(11, Math.min(30, Math.min((s.x1 - s.x0) / 12, (s.y1 - s.y0) / 13)));
+      const sinA = Math.sin(spin);
+      const cosA = Math.cos(spin);
+      const proj = (u: number, v: number, k: number) => {
+        const ux = (u - 3.5) * mod;
+        const vy = (v - 3.5) * mod;
+        const rx = ux * cosA - vy * sinA;
+        const ry = ux * sinA + vy * cosA;
+        return { x: cx + rx, y: cy + ry * tilt - k * mod * 0.8 + mod * 1.6, d: ry - k * 0.7 };
+      };
+
+      // Ground grid.
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      for (let i = 0; i <= 8; i++) {
+        const a = proj(i, 0, 0);
+        const b = proj(i, 8, 0);
+        const c = proj(0, i, 0);
+        const e = proj(8, i, 0);
+        s.line(a.x, a.y, b.x, b.y, s.dim, 0.6);
+        s.line(c.x, c.y, e.x, e.y, s.dim, 0.6);
+      }
+      ctx.restore();
+
+      const arriveOf = (i: number) => s.ease(s.clamp01((lt - i * 0.33) / 1.15));
+      const leaveOf = (i: number) => s.ease(s.clamp01((lt - KIT_HOLD - i * 0.2) / (KIT_OUT - KIT_HOLD)));
+
+      const blocks: Block[] = [];
+      KIT.forEach((part, i) => {
+        const origin = layout[i]!;
+        const arrive = arriveOf(i); // flown in, staggered
+        const leave = leaveOf(i);
+        const alpha = Math.min(arrive, 1 - leave);
+        if (alpha <= 0.02) return;
+
+        // Off-board start, snap into place, then break away the same way out.
+        const seed = ((i * 53) % 17) / 17;
+        const dir = seed * 6.283;
+        const offU = Math.cos(dir) * 9;
+        const offV = Math.sin(dir) * 9;
+        const offK = 5 + seed * 4;
+        const u = s.lerp(origin[0] + offU, origin[0], arrive) + offU * leave * 1.1;
+        const v = s.lerp(origin[1] + offV, origin[1], arrive) + offV * leave * 1.1;
+        const k = s.lerp(origin[2] + offK, origin[2], arrive) + offK * leave * 1.1;
+
+        blocks.push({
+          part,
+          u,
+          v,
+          k,
+          alpha,
+          settled: arrive >= 1 && leave === 0,
+          depth: proj(u + part.w / 2, v + part.d / 2, k).d,
+          sinceLanded: lt - (i * 0.33 + 1.15),
+        });
+      });
+      blocks.sort((a, b) => a.depth - b.depth);
+
+      for (const b of blocks) {
+        const { part, u, v, k, alpha } = b;
+        const top = [
+          proj(u, v, k + part.h),
+          proj(u + part.w, v, k + part.h),
+          proj(u + part.w, v + part.d, k + part.h),
+          proj(u, v + part.d, k + part.h),
+        ];
+        const backLeft = proj(u, v + part.d, k);
+        const backRight = proj(u + part.w, v + part.d, k);
+        const frontRight = proj(u + part.w, v, k);
+        // A part flares accent as it lands, then settles to ink.
+        const fresh = s.clamp01(1 - Math.abs(b.sinceLanded) / 0.5);
+
+        ctx.save();
+        const face = (pts: { x: number; y: number }[], shade: number, fill: string) => {
+          ctx.globalAlpha = alpha * shade;
+          ctx.fillStyle = fill;
+          ctx.beginPath();
+          pts.forEach((p, n) => (n ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)));
+          ctx.closePath();
+          ctx.fill();
+          // Every part keeps its edge: the joints are the point of the scene.
+          ctx.globalAlpha = alpha * 0.55;
+          ctx.strokeStyle = s.ink;
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        };
+        face(top, 0.1 + fresh * 0.5, fresh > 0.05 ? s.acc : s.ink);
+        face([top[3]!, top[2]!, backRight, backLeft], 0.24, s.ink);
+        face([top[2]!, top[1]!, frontRight, backRight], 0.14, s.ink);
+        ctx.restore();
+      }
+
+      // Joints: accent marks where two settled parts meet along u.
+      if (lt > 1.4 && lt < KIT_OUT) {
+        ctx.save();
+        ctx.fillStyle = s.acc;
+        ctx.globalAlpha = 0.9;
+        for (let i = 0; i < KIT.length; i++) {
+          const a = layout[i]!;
+          const pa = KIT[i]!;
+          for (let j = i + 1; j < KIT.length; j++) {
+            const b = layout[j]!;
+            const pb = KIT[j]!;
+            const meets =
+              (Math.abs(a[0] + pa.w - b[0]) < 0.01 || Math.abs(b[0] + pb.w - a[0]) < 0.01) &&
+              Math.abs(a[1] - b[1]) < 3 &&
+              Math.abs(a[2] - b[2]) < 2;
+            if (!meets) continue;
+            if (Math.min(arriveOf(i), arriveOf(j)) < 1 || leaveOf(i) > 0) continue;
+            const mid = proj(a[0] + pa.w, (a[1] + b[1]) / 2 + 0.5, Math.max(a[2], b[2]) + 0.4);
+            ctx.fillRect(mid.x - 2.5, mid.y - 2.5, 5, 5);
+          }
+        }
+        ctx.restore();
+      }
+
+      const placed = blocks.filter((b) => b.settled).length;
+      s.txt(`KIT — ${config ? 'CONFIGURATION 02' : 'CONFIGURATION 01'}`, s.x0, s.y0 - 22, 10, s.dim, 800, '0.14em');
+      s.rtxt(`${placed}/${KIT.length} PARTS`, s.x1, s.y0 - 22, 10, s.acc, 800, '0.14em');
+
+      let cap: string;
+      let col = s.ink;
+      if (lt < KIT_IN) {
+        cap = config ? 'THE SAME PARTS, ARRANGED DIFFERENTLY' : 'MODULAR PARTS, NOT A FIXED PLATFORM';
+      } else if (lt < KIT_HOLD) {
+        cap = 'ASSEMBLED AROUND YOUR WORKFLOWS';
+      } else if (!config) {
+        cap = 'WORKFLOWS CHANGE — SO DOES THE BUILD';
+        col = s.acc;
+      } else {
+        cap = 'YOUR TEAMS KEEP BUILDING';
+        col = s.acc;
+      }
+      s.txt(cap, s.x0, s.y1 + 26, s.mText(cap, 12, 800, '0.14em') < s.x1 - s.x0 ? 12 : 10, col, 800, '0.14em');
+    },
+  };
+}
+
+/**
+ * The two competing builds of the third service. The panel shows a picker while
+ * this slot is on screen; adding a concept is one more entry here.
+ */
+function productsChoice(): SceneChoice {
+  return {
+    label: 'AI & DATA PRODUCTS',
+    variants: [
+      {
+        id: 'A',
+        label: 'Fabrication',
+        title: 'A product printed from your own data',
+        scene: fabricationScene(),
+      },
+      {
+        id: 'C',
+        label: 'Kit of parts',
+        title: 'Modular parts, reassembled per workflow',
+        scene: kitScene(),
+      },
+    ],
+  };
+}
+
 /* ── SCENE 4 · Scientific & portfolio intelligence ──────────────────────────
    Evidence accumulates along each program until its next gate resolves:
    advance, hold, or stop. Columns are measured, not assumed, so the verdicts
@@ -777,7 +1038,7 @@ export function initServices(root: HTMLElement): ServicesHandle {
   const opts: ServicesOptions = { ...SERVICES_DEFAULTS };
 
   const panel = initScenePanel(root, {
-    scenes: [adoptionScene(), validationScene(), productsScene(), portfolioScene()],
+    scenes: [adoptionScene(), validationScene(), productsChoice(), portfolioScene()],
     sectionAttr: 'data-svc',
     titleAttr: 'data-svc-title',
     hashPrefix: 'svc',

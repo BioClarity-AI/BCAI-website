@@ -32,6 +32,10 @@ const { kicker, initial, noun } = Astro.props;
       <span class="lock-dot" data-lock-dot aria-hidden="true"></span>
       <span data-lock-label>Auto</span>
     </button>
+
+    {/* Filled by the panel while a scene that has competing builds is on screen. */}
+    <span class="sep" data-variant-sep aria-hidden="true" hidden></span>
+    <span class="variants" data-variants role="group" aria-label="Scene concept" hidden></span>
   </div>
 </div>
 
@@ -116,6 +120,63 @@ const { kicker, initial, noun } = Astro.props;
     height: 5px;
     background: transparent;
     border: 1px solid currentColor;
+  }
+
+  /* The concept picker. Its contents are built by scenePanel.ts once it knows
+     how many builds the scene offers, so the children are addressed globally —
+     Astro's scoping only reaches elements that were in this template. */
+  .variants {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .variants[hidden],
+  .sep[hidden] {
+    display: none;
+  }
+
+  .variants :global(.variant-picks) {
+    display: flex;
+    gap: 4px;
+  }
+
+  .variants :global(button) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    background: transparent;
+    color: var(--color-neutral-700);
+    border: 1px solid var(--color-divider);
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 10px;
+    line-height: 1;
+  }
+
+  .variants :global(button:hover) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .variants :global(button[aria-pressed='true']) {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-neutral-100);
+  }
+
+  .variants :global(.variant-name) {
+    white-space: nowrap;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-neutral-600);
   }
 
   /* On a phone held sideways the panel is barely 300px tall, and the drawing
