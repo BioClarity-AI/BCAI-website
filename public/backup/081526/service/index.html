@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="utf-8"><meta name="robots" content="noindex, nofollow"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="generator" content="Astro v5.18.2"><!-- The ground, inline and first. global.css is a render-blocking link, and
+         the html background lives inside it, so until it arrives the browser
+         paints its own white canvas — that is the flash between pages. This
+         paints the brand ground from the first byte instead.
+
+         The literal is deliberate: a var() cannot help here, because the file
+         that defines the token is the one being waited on. Keep it in step
+         with --color-bg in global.css. --><style>
+      html,
+      body {
+        background: #f3f2f2;
+      }
+    </style><title>Services — BioClarity AI</title><meta name="description" content="Four services scoped to your portfolio: AI adoption strategy, validation and benchmarking, AI and data products, and portfolio intelligence. Vendor agnostic, built around your science."><link rel="canonical" href="https://bioclarity.ai/services/"><meta property="og:type" content="website"><meta property="og:site_name" content="BioClarity AI"><meta property="og:title" content="Services — BioClarity AI"><meta property="og:description" content="Four services scoped to your portfolio: AI adoption strategy, validation and benchmarking, AI and data products, and portfolio intelligence. Vendor agnostic, built around your science."><meta property="og:url" content="https://bioclarity.ai/services/"><meta property="og:image" content="https://bioclarity.ai/images/og-default.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Services — BioClarity AI"><meta name="twitter:description" content="Four services scoped to your portfolio: AI adoption strategy, validation and benchmarking, AI and data products, and portfolio intelligence. Vendor agnostic, built around your science."><meta name="twitter:image" content="https://bioclarity.ai/images/og-default.png"><link rel="icon" href="/favicon.ico" sizes="any"><link rel="sitemap" href="/sitemap-index.xml"><!-- The latin subset covers the visible copy; preloading it removes a
+         render-blocking round trip on the largest text (the h1). --><link rel="preload" href="/fonts/archivo-latin.woff2" as="font" type="font/woff2" crossorigin><!-- is:inline keeps this out of the JS bundle pipeline — it is data for
+         crawlers, not a script to execute. --><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"BioClarity AI","legalName":"BioClarity AI Inc.","url":"https://bioclarity.ai","logo":"https://bioclarity.ai/images/logo.png","description":"BioClarity AI builds the trust and validation layer for AI-driven science, making an AI model’s understanding of living systems verifiable from molecule to organism.","sameAs":["https://www.linkedin.com/company/bioclarity-ai"]}</script><!-- Page-to-page fades. Cross-document view transitions snapshot the new
+         page before its content has mounted, which reads as a flash, so the
+         fade is driven here instead: hide the body, reveal it once the page
+         content exists, fade out before following a link.
+
+         is:inline and in the head on purpose — a bundled module script is
+         deferred, so the browser would paint the page before this could hide
+         it and the fade would become a flicker. The 1.2s deadline in check()
+         is the safety net: the body reveals itself even if the content probe
+         never matches. --><script>
+      (function () {
+        if (window.__bcaiPageFade) return;
+        window.__bcaiPageFade = true;
+        var d = document;
+
+        var st = d.createElement('style');
+        st.textContent = 'body { opacity: 0; }';
+        (d.head || d.documentElement).appendChild(st);
+
+        function reveal() {
+          if (!d.body) return;
+          d.body.style.transition = 'opacity 0.3s ease';
+          d.body.style.opacity = '0';
+          st.remove();
+          requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+              d.body.style.opacity = '1';
+              setTimeout(function () {
+                d.body.style.transition = '';
+                d.body.style.opacity = '';
+              }, 400);
+            });
+          });
+        }
+
+        // The shell pages mount their copy column; 404 and any future plain
+        // page only have a <main>. Either counts as "there is content now".
+        var t0 = Date.now();
+        (function check() {
+          var ready = d.body && (d.querySelector('[data-page-copy], main') || Date.now() - t0 > 1200);
+          if (ready) reveal();
+          else setTimeout(check, 40);
+        })();
+
+        // Restored from bfcache: make sure nothing is left faded out.
+        window.addEventListener('pageshow', function (e) {
+          if (e.persisted && d.body) {
+            st.remove();
+            d.body.style.opacity = '1';
+            d.body.style.transition = '';
+          }
+        });
+
+        // The site builds to directories, so the address bar reads /services/
+        // while the links are written /services#svc-2. Comparing the two raw
+        // would call a same-page anchor a navigation and reload the page.
+        function samePath(a, b) {
+          return a.replace(/\/+$/, '') === b.replace(/\/+$/, '');
+        }
+
+        d.addEventListener(
+          'click',
+          function (e) {
+            if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+            var a = e.target && e.target.closest && e.target.closest('a[href]');
+            if (!a || a.target === '_blank' || a.hasAttribute('download')) return;
+            var href = a.getAttribute('href') || '';
+            if (/^(mailto:|tel:|#|javascript:)/i.test(href)) return;
+            var url;
+            try {
+              url = new URL(a.href, location.href);
+            } catch (err) {
+              return;
+            }
+            if (url.origin !== location.origin) return;
+            // Already on this page: the click is an in-page anchor, or a
+            // reload of what is already on screen. Neither wants a fade.
+            if (samePath(url.pathname, location.pathname)) return;
+            e.preventDefault();
+            if (d.body) {
+              d.body.style.transition = 'opacity 0.16s ease';
+              d.body.style.opacity = '0';
+            }
+            setTimeout(function () {
+              location.href = url.href;
+            }, 170);
+          },
+          true,
+        );
+      })();
+    </script><link rel="stylesheet" href="/backup/081526/service/assets/company.CRZBKk_s.css">
+<style>canvas[data-astro-cid-df32corz]{position:absolute;inset:0;width:100%;height:100%;display:block}.overlay[data-astro-cid-df32corz]{position:absolute;top:clamp(16px,2.4vw,28px);left:clamp(16px,2.6vw,32px);right:clamp(16px,2.6vw,32px);pointer-events:none}.kicker[data-astro-cid-df32corz]{margin:0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--color-neutral-600)}.readout[data-astro-cid-df32corz]{font-family:var(--font-heading);font-weight:800;font-size:clamp(19px,2.6vw,30px);letter-spacing:-.01em;line-height:1;margin:6px 0 0;color:var(--color-accent)}.controls[data-astro-cid-df32corz]{display:flex;align-items:center;gap:14px;margin-top:10px;pointer-events:auto;color:var(--color-neutral-600)}.controls[data-astro-cid-df32corz] button[data-astro-cid-df32corz]{background:none;border:0;padding:0;cursor:pointer;font-family:var(--font-body);font-size:15px;line-height:1;color:inherit}.controls[data-astro-cid-df32corz] button[data-astro-cid-df32corz]:hover{color:var(--color-accent)}.sep[data-astro-cid-df32corz]{width:1px;height:11px;background:var(--color-divider)}.lock[data-astro-cid-df32corz]{display:flex;align-items:center;gap:5px;font-family:var(--font-heading)!important;font-weight:800;font-size:10px!important;letter-spacing:.12em;text-transform:uppercase}.lock-dot[data-astro-cid-df32corz]{width:5px;height:5px;background:transparent;border:1px solid currentColor}@media(orientation:landscape)and (max-height:520px){.overlay[data-astro-cid-df32corz]{top:10px;left:14px;right:14px}.kicker[data-astro-cid-df32corz]{display:none}.readout[data-astro-cid-df32corz]{font-size:16px}.controls[data-astro-cid-df32corz]{margin-top:6px}}
+.eyebrow[data-astro-cid-ucd2ps2b]{display:flex;align-items:center;gap:10px;margin:0 0 22px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--color-neutral-700)}.pulse[data-astro-cid-ucd2ps2b]{width:8px;height:8px;flex:none;background:var(--color-accent);animation:bc-pulse 2.4s ease-in-out infinite}h1[data-astro-cid-ucd2ps2b]{font-size:clamp(34px,3.6vw,56px);line-height:1.02;letter-spacing:-.025em;margin:0 0 22px;max-width:15ch}.lede[data-astro-cid-ucd2ps2b]{font-size:17px;line-height:1.55;color:var(--color-neutral-800);max-width:46ch;margin:0 0 28px}section[data-astro-cid-ucd2ps2b]{border-top:2px solid var(--color-divider);padding:26px 0 30px}section[data-astro-cid-ucd2ps2b].last{padding-bottom:0}h2[data-astro-cid-ucd2ps2b]{font-size:clamp(20px,1.9vw,27px);line-height:1.08;letter-spacing:-.02em;margin:0}.claim[data-astro-cid-ucd2ps2b]{font-family:var(--font-heading);font-weight:800;font-size:17px;line-height:1.35;margin:12px 0 0;max-width:42ch}.body[data-astro-cid-ucd2ps2b]{font-size:16px;line-height:1.5;color:var(--color-neutral-800);margin:10px 0 0;max-width:46ch}blockquote[data-astro-cid-ucd2ps2b]{margin:20px 0 0;padding:18px 0 0;border-top:1px dotted var(--color-neutral-500);max-width:46ch}blockquote[data-astro-cid-ucd2ps2b] p[data-astro-cid-ucd2ps2b]{font-size:16px;line-height:1.5;margin:0}blockquote[data-astro-cid-ucd2ps2b] footer[data-astro-cid-ucd2ps2b]{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--color-neutral-600);margin-top:12px}@media(prefers-reduced-motion:reduce){.pulse[data-astro-cid-ucd2ps2b]{animation:none}}
+.shell[data-astro-cid-uxukrvmx]{height:100dvh;min-height:460px;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text);overflow:hidden}.split[data-astro-cid-uxukrvmx]{flex:1;display:grid;grid-template-columns:minmax(380px,var(--split-copy)) 1fr;min-height:0}.split[data-astro-cid-uxukrvmx].wide{grid-template-columns:minmax(280px,var(--split-copy-wide)) 1fr}.copy[data-astro-cid-uxukrvmx]{position:relative;padding:28px 44px 40px;display:flex;flex-direction:column;justify-content:flex-start;border-right:2px solid var(--color-divider);min-width:0;min-height:0;overflow-y:auto}.copy[data-astro-cid-uxukrvmx].wide{display:block;padding:28px clamp(20px,3.4vw,44px) 56px}.stage[data-astro-cid-uxukrvmx]{position:relative;overflow:hidden;min-width:0;min-height:0}@media(orientation:portrait)and (max-width:900px){.shell[data-astro-cid-uxukrvmx]{height:auto;min-height:100svh;overflow:visible}.split[data-astro-cid-uxukrvmx],.split[data-astro-cid-uxukrvmx].wide{grid-template-columns:1fr}.stage[data-astro-cid-uxukrvmx]{order:1;min-height:60svh;border-bottom:2px solid var(--color-divider)}.copy[data-astro-cid-uxukrvmx]{order:2;padding:32px 20px 40px;border-right:0;overflow:visible}}@media(orientation:landscape)and (max-height:520px){.shell[data-astro-cid-uxukrvmx]{min-height:0}.split[data-astro-cid-uxukrvmx],.split[data-astro-cid-uxukrvmx].wide{grid-template-columns:minmax(0,var(--split-copy-landscape)) 1fr}.copy[data-astro-cid-uxukrvmx],.copy[data-astro-cid-uxukrvmx].wide{padding:18px clamp(14px,2.6vw,32px) 24px}}
+</style></head> <body>  <div class="shell" data-astro-cid-uxukrvmx> <header class="nav-bar" data-site-nav data-astro-cid-4lunwx2e> <a class="brand" href="/" data-astro-cid-4lunwx2e> <span class="brand-name" data-astro-cid-4lunwx2e>BioClarity AI</span> <span class="brand-tag" data-brand-tag data-astro-cid-4lunwx2e>Vendor Agnostic AI</span> </a> <nav class="nav-links" aria-label="Primary" data-astro-cid-4lunwx2e> <div class="menu" data-astro-cid-4lunwx2e> <a class="nav-link" href="/services" aria-current="page" data-astro-cid-4lunwx2e> Services </a> <div class="menu-panel" data-astro-cid-4lunwx2e> <a href="/services#svc-1" data-pick="bcai:service" data-pick-hash="svc" data-pick-index="1" data-pick-path="/services" data-astro-cid-4lunwx2e> <span class="menu-title" data-astro-cid-4lunwx2e>AI Adoption Strategy</span> <span class="menu-blurb" data-astro-cid-4lunwx2e>Identify where AI can create measurable value.</span> </a><a href="/services#svc-2" data-pick="bcai:service" data-pick-hash="svc" data-pick-index="2" data-pick-path="/services" data-astro-cid-4lunwx2e> <span class="menu-title" data-astro-cid-4lunwx2e>Validation &amp; Benchmarking</span> <span class="menu-blurb" data-astro-cid-4lunwx2e>Prove what works for your science.</span> </a><a href="/services#svc-3" data-pick="bcai:service" data-pick-hash="svc" data-pick-index="3" data-pick-path="/services" data-astro-cid-4lunwx2e> <span class="menu-title" data-astro-cid-4lunwx2e>AI &amp; Data Products</span> <span class="menu-blurb" data-astro-cid-4lunwx2e>Build around your data, workflows, and portfolio.</span> </a><a href="/services#svc-4" data-pick="bcai:service" data-pick-hash="svc" data-pick-index="4" data-pick-path="/services" data-astro-cid-4lunwx2e> <span class="menu-title" data-astro-cid-4lunwx2e>Portfolio Intelligence</span> <span class="menu-blurb" data-astro-cid-4lunwx2e>Turn complex evidence into better R&amp;D decisions.</span> </a> </div> </div><div class="menu" data-astro-cid-4lunwx2e> <a class="nav-link" href="/science" data-astro-cid-4lunwx2e> Science </a> <div class="menu-panel" data-astro-cid-4lunwx2e> <a href="/science#sci-1" data-pick="bcai:science" data-pick-hash="sci" data-pick-index="1" data-pick-path="/science" data-astro-cid-4lunwx2e> <span class="menu-title" data-astro-cid-4lunwx2e>Platform</span> <span class="menu-blurb" data-astro-cid-4lunwx2e>One layer between model and decision.</span> </a><a href="/science#sci-2" data-pick="bcai:science" data-pick-hash="sci" data-pick-index="2" data-pick-path="/science" data-astro-cid-4lunwx2e> <span class="menu-title" data-astro-cid-4lunwx2e>Why Generalizability Metrics</span> <span class="menu-blurb" data-astro-cid-4lunwx2e>Whether the AI actually learns biology.</span> </a> </div> </div><a class="nav-link" href="/company" data-astro-cid-4lunwx2e> Company </a> <a class="btn btn-primary nav-cta" href="/request-access" data-astro-cid-4lunwx2e>Request access</a> <span class="nav-break" aria-hidden="true" data-astro-cid-4lunwx2e></span> </nav> </header> <script type="module">for(const e of document.querySelectorAll(".menu"))e.addEventListener("mouseleave",()=>e.classList.remove("is-closed"));document.querySelectorAll("[data-pick]").forEach(e=>{e.addEventListener("click",o=>{e.closest(".menu")?.classList.add("is-closed"),document.activeElement?.blur?.();const{pick:t,pickHash:c,pickIndex:n,pickPath:a}=e.dataset;if(!t||!c||!n||!a||(location.pathname.replace(/\/$/,"")||"/")!==a)return;o.preventDefault();const s=Number(n);try{history.replaceState(null,"",`#${c}-${s}`)}catch{}window.dispatchEvent(new CustomEvent(t,{detail:s}))})});</script>  <main class="split wide" data-astro-cid-uxukrvmx> <div class="copy wide" data-page-copy data-astro-cid-uxukrvmx>  <p class="eyebrow" data-astro-cid-ucd2ps2b> <span class="pulse" aria-hidden="true" data-astro-cid-ucd2ps2b></span>
+How we engage
+</p> <h1 data-astro-cid-ucd2ps2b>Built Around Your Science</h1> <p class="lede" data-astro-cid-ucd2ps2b>
+We work with R&D organizations to find where AI can create real impact, validate it
+      against their own data and workflows, and tailor proven capabilities to their
+      portfolio. No platform agenda. No preferred vendor. Four services, scoped to what your
+      portfolio needs.
+</p> <section data-svc="1" data-astro-cid-ucd2ps2b> <h2 data-svc-title="1" data-astro-cid-ucd2ps2b>AI Adoption Strategy</h2> <p class="claim" data-astro-cid-ucd2ps2b>
+Adopt AI where it can change scientific decisions—not simply increase AI usage.
+</p> <p class="body" data-astro-cid-ucd2ps2b>Identify where AI can create measurable value.</p> <p class="body" data-astro-cid-ucd2ps2b>
+AI is changing not only what R&D teams can do, but how they work, collaborate, and
+        make decisions. We identify where AI can create measurable value, reshape workflows
+        around those opportunities, and manage adoption in a way that fits your culture,
+        operating model, and scientific objectives.
+</p> </section> <section data-svc="2" data-astro-cid-ucd2ps2b> <h2 data-svc-title="2" data-astro-cid-ucd2ps2b>Validation &amp; Benchmarking</h2> <p class="claim" data-astro-cid-ucd2ps2b>
+AI should earn trust against your data, workflows, and scientific standards.
+</p> <p class="body" data-astro-cid-ucd2ps2b>Prove what works for your science.</p> </section> <section data-svc="3" data-astro-cid-ucd2ps2b> <h2 data-svc-title="3" data-astro-cid-ucd2ps2b>AI &amp; Data Products</h2> <p class="claim" data-astro-cid-ucd2ps2b>
+Build around your science and portfolio—not around the limitations of a platform.
+</p> <p class="body" data-astro-cid-ucd2ps2b>Build around your data, workflows, and portfolio.</p> <p class="body" data-astro-cid-ucd2ps2b>
+Build around your data, workflows, and portfolio—while equipping your internal IT and
+        data teams to become builders, not permanent dependents on external vendors.
+</p> <blockquote data-astro-cid-ucd2ps2b> <p data-astro-cid-ucd2ps2b>
+“I don’t yet know how to engineer a biologic, and it’s too early to bring in a
+          molecular engineer. I’d like to design a biologic for my target and develop it into
+          a proposal for further development. AI would be the perfect business partner for
+          this stage.”
+</p> <footer data-astro-cid-ucd2ps2b>Biologist, customer discovery interview</footer> </blockquote> </section> <section data-svc="4" class="last" data-astro-cid-ucd2ps2b> <h2 data-svc-title="4" data-astro-cid-ucd2ps2b>Portfolio Intelligence</h2> <p class="claim" data-astro-cid-ucd2ps2b>Intelligence creates value only when it leads to a better next decision.</p> <p class="body" data-astro-cid-ucd2ps2b>Turn complex evidence into better R&D decisions.</p> </section>  </div> <div class="stage" data-page-stage data-astro-cid-uxukrvmx>  <canvas data-canvas aria-hidden="true" data-astro-cid-df32corz></canvas> <div class="overlay" data-overlay data-astro-cid-df32corz> <p class="kicker" data-astro-cid-df32corz>Services — live</p> <p class="readout" data-readout aria-live="off" data-astro-cid-df32corz>AI ADOPTION STRATEGY</p> <div class="controls" data-astro-cid-df32corz> <button type="button" data-prev title="Previous service" aria-label="Previous service" data-astro-cid-df32corz>←</button> <button type="button" data-next title="Next service" aria-label="Next service" data-astro-cid-df32corz>→</button> <span class="sep" aria-hidden="true" data-astro-cid-df32corz></span> <button type="button" data-lock class="lock" title="Hold this scene" aria-pressed="false" data-astro-cid-df32corz> <span class="lock-dot" data-lock-dot aria-hidden="true" data-astro-cid-df32corz></span> <span data-lock-label data-astro-cid-df32corz>Auto</span> </button> </div> </div>   </div> </main> </div>  </body></html> <script type="module">function a(t){return t.deltaMode===1?t.deltaY*16:t.deltaMode===2?t.deltaY*window.innerHeight:t.deltaY}function l(){const t=document.querySelector("[data-page-copy]");if(!t)return null;const r=getComputedStyle(t).overflowY;return r!=="auto"&&r!=="scroll"?null:t.scrollHeight-t.clientHeight>1?t:null}function s(t,r){const n=t.scrollHeight-t.clientHeight,e=Math.max(0,Math.min(n,t.scrollTop+r));return e===t.scrollTop?!1:(t.scrollTop=e,!0)}const c=t=>!!t?.closest?.("[data-page-stage]");let i=!1;function d(){if(i)return;i=!0,document.addEventListener("wheel",n=>{if(!c(n.target))return;const e=l();e&&s(e,a(n))&&n.preventDefault()},{passive:!1});let t=!1,r=0;document.addEventListener("touchstart",n=>{const e=n.touches[0];t=!!e&&c(n.target),e&&(r=e.clientY)},{passive:!0}),document.addEventListener("touchmove",n=>{if(!t)return;const e=n.touches[0];if(!e)return;const o=l();if(!o)return;const u=r-e.clientY;r=e.clientY,s(o,u)&&n.preventDefault()},{passive:!1}),document.addEventListener("touchend",()=>{t=!1},{passive:!0})}d();</script>  <script type="module" src="/backup/081526/service/assets/services.astro_astro_type_script_index_0_lang.CjIRcNbt.js"></script> 
