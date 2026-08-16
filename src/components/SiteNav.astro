@@ -129,42 +129,10 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 </header>
 
 <script>
-  const menus = [...document.querySelectorAll<HTMLElement>('.menu')];
-
-  /** Shut every menu: the tap-opened state and the picked-while-hovered one. */
-  const closeAll = (except?: HTMLElement) => {
-    for (const menu of menus) {
-      if (menu === except) continue;
-      menu.classList.remove('is-open');
-    }
-  };
-
-  for (const menu of menus) {
-    const label = menu.querySelector<HTMLAnchorElement>('.nav-link');
-
-    // A touch screen has no hover, so the menu would never open. The first tap
-    // opens it instead of following the link; a second tap on the same label
-    // goes through to the page. Pointer devices keep the hover behaviour and
-    // never reach this.
-    label?.addEventListener('click', (event) => {
-      if (!window.matchMedia('(hover: none)').matches) return;
-      if (menu.classList.contains('is-open')) return;
-      event.preventDefault();
-      closeAll();
-      menu.classList.remove('is-closed');
-      menu.classList.add('is-open');
-    });
-
-    // Moving off the menu resets both states, so hover works normally again.
-    menu.addEventListener('mouseleave', () => {
-      menu.classList.remove('is-closed', 'is-open');
-    });
+  // Moving off a menu clears the closed-on-pick state, so hover works again.
+  for (const menu of document.querySelectorAll<HTMLElement>('.menu')) {
+    menu.addEventListener('mouseleave', () => menu.classList.remove('is-closed'));
   }
-
-  // A tap anywhere else dismisses an open menu.
-  document.addEventListener('click', (event) => {
-    if (!(event.target as Element | null)?.closest?.('.menu')) closeAll();
-  });
 
   /**
    * A menu pick for the page you are already on: keep the page, hand the
@@ -174,9 +142,7 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     link.addEventListener('click', (event) => {
       // Close the menu either way — on a same-page pick nothing else would,
       // and on a navigation it should not sit open through the page fade.
-      const menu = link.closest<HTMLElement>('.menu');
-      menu?.classList.remove('is-open');
-      menu?.classList.add('is-closed');
+      link.closest<HTMLElement>('.menu')?.classList.add('is-closed');
       (document.activeElement as HTMLElement | null)?.blur?.();
 
       const { pick, pickHash, pickIndex, pickPath } = link.dataset;
@@ -282,12 +248,22 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
     box-shadow: var(--shadow-md);
   }
 
-  /* focus-within keeps the menu reachable by keyboard, and .is-open by tap on a
-     touch screen, neither of which the hover-only source could do. */
+  /* focus-within keeps the menu reachable by keyboard, which the hover-only
+     source could not be. */
   .menu:hover .menu-panel,
-  .menu:focus-within .menu-panel,
-  .menu.is-open .menu-panel {
+  .menu:focus-within .menu-panel {
     display: block;
+  }
+
+  /* No pointer, no menu. A dropdown that needs hover is a trap on a phone: it
+     either never opens, or it eats the tap that should have followed the link.
+     The label is already a link to the page these sections live on, and the
+     page lists them, so nothing here is unreachable without it. */
+  @media (hover: none) {
+    .menu:hover .menu-panel,
+    .menu:focus-within .menu-panel {
+      display: none;
+    }
   }
 
   /* Set when an item is picked, so the menu closes under a pointer that is
@@ -413,6 +389,48 @@ const path = Astro.url.pathname.replace(/\/$/, '') || '/';
       left: 20px;
       right: 20px;
       width: auto;
+    }
+  }
+
+  /* A phone on its side has width to spare and almost no height: put the nav
+     back on one row rather than let the wrapped layout above spend a quarter
+     of the viewport on it. Must follow that query to override it. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .nav-bar {
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      padding: 10px 20px;
+      gap: 16px;
+    }
+
+    .nav-links {
+      display: flex;
+      width: auto;
+    }
+
+    .nav-break {
+      display: none;
+    }
+
+    /* The wrapped layout above orders the items to lay them across two rows.
+       Back on one row that ordering is wrong — .nav-links sorts ahead of the
+       brand and the button lands before the links — so clear all of it and
+       let the markup order stand. */
+    .brand,
+    .nav-links,
+    .nav-cta,
+    .menu,
+    .nav-link {
+      order: 0;
+    }
+
+    .brand {
+      max-width: none;
+      flex-wrap: nowrap;
+    }
+
+    .nav-cta {
+      margin-left: 0;
     }
   }
 </style>

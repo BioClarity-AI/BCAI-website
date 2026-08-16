@@ -45,8 +45,8 @@ const { title, description, image, noindex, wide = false } = Astro.props;
 </Base>
 
 <script>
-  import { initWheelForward } from '../scripts/wheelForward';
-  initWheelForward();
+  import { initScrollForward } from '../scripts/scrollForward';
+  initScrollForward();
 </script>
 
 <style>
@@ -60,15 +60,17 @@ const { title, description, image, noindex, wide = false } = Astro.props;
     overflow: hidden;
   }
 
+  /* The percentages are tokens in global.css; the pixel floors stay here
+     because they are a property of this layout, not of the design system. */
   .split {
     flex: 1;
     display: grid;
-    grid-template-columns: minmax(380px, 40%) 1fr;
+    grid-template-columns: minmax(380px, var(--split-copy)) 1fr;
     min-height: 0;
   }
 
   .split.wide {
-    grid-template-columns: minmax(280px, 44%) 1fr;
+    grid-template-columns: minmax(280px, var(--split-copy-wide)) 1fr;
   }
 
   .copy {
@@ -98,7 +100,11 @@ const { title, description, image, noindex, wide = false } = Astro.props;
     min-height: 0;
   }
 
-  @media (max-width: 900px) {
+  /* Stack in portrait only. Landscape keeps the split at every width: height
+     is the scarce resource there, and stacking a 320px-tall viewport buries
+     the stage under a screenful of copy. A narrow landscape window gets
+     proportional columns instead — see the query below. */
+  @media (orientation: portrait) and (max-width: 900px) {
     .shell {
       height: auto;
       min-height: 100svh;
@@ -121,6 +127,28 @@ const { title, description, image, noindex, wide = false } = Astro.props;
       padding: 32px 20px 40px;
       border-right: 0;
       overflow: visible;
+    }
+  }
+
+  /* A phone on its side: two columns, but only ~400px of height to put them
+     in, and sometimes under 600 of width. The shell has to stop insisting on
+     a 460px minimum it does not have, or the document scrolls behind the
+     fixed panel; the copy gives back padding it has no room for; and the
+     columns go proportional, because the 380px floor on the copy column would
+     leave the stage a sliver on a 568px-wide screen. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .shell {
+      min-height: 0;
+    }
+    /* No pixel floor here on purpose: 380px of copy on a 568px-wide screen
+       leaves the stage a sliver, so the split stays proportional. */
+    .split,
+    .split.wide {
+      grid-template-columns: minmax(0, var(--split-copy-landscape)) 1fr;
+    }
+    .copy,
+    .copy.wide {
+      padding: 18px clamp(14px, 2.6vw, 32px) 24px;
     }
   }
 </style>

@@ -56,7 +56,7 @@ src/
     science.ts       Two science scenes
     company.ts       The cost of finding a flaw late
     requestAccess.ts One email's journey
-    wheelForward.ts  Sends a wheel over the stage to the copy column
+    scrollForward.ts Sends a wheel or a drag over the stage to the copy column
     settings.ts      Best-effort fetch of public/settings.json
   styles/
     global.css     Modernist design tokens and component classes

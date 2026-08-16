@@ -157,6 +157,15 @@
   --radius-md: 0px;
   --radius-lg: 0px;
 
+  /* How much of the two-column split the copy takes; the stage gets the rest.
+     Three values because the shapes have different constraints, not because
+     one was forgotten. Each is paired in PageShell with a minimum width the
+     copy may not go below — that floor is what keeps the columns honest at
+     small sizes, so raise these with it in mind. */
+  --split-copy: 45%;           /* landing, company, request access */
+  --split-copy-wide: 47%;      /* services and science: more copy to hold */
+  --split-copy-landscape: 50%; /* a phone on its side, where width is tight */
+
   /* Elevation — derived from the ground: soft ink-tinted shadows on a
      light theme, a hairline edge + ambient darkness on a dark one. */
   --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
@@ -362,7 +371,8 @@ html, body { margin: 0; height: 100%; }
    nav wraps and the first row holds only the brand and the button, so the tag
    earns its place back; SiteNav lets it wrap under the name on the narrowest
    screens, where it no longer fits beside it. */
-@media (min-width: 761px) and (max-width: 880px) {
+@media (min-width: 761px) and (max-width: 880px),
+       (orientation: landscape) and (max-height: 520px) {
   [data-brand-tag] { display: none }
 }
 
@@ -370,11 +380,25 @@ html, body { margin: 0; height: 100%; }
    document itself must not scroll, but it must never be taller than the window
    either (see the shell's height: 100dvh).
 
-   Below the stacking breakpoint the two columns become one tall column and the
-   document has to scroll again — the design source is desktop-only, so this
-   query is ours, not its. */
-@media (min-width: 901px) {
+   This has to name the same shape as the two-column layout in PageShell: while
+   the columns are stacked the document is the thing that scrolls, and pinning
+   it would strand the copy off-screen. Landscape counts — a phone on its side
+   keeps the split. The design source is desktop-only, so both queries are
+   ours, not its; keep them in step. */
+@media (min-width: 901px), (orientation: landscape) {
   html, body { overflow: hidden; height: 100%; }
+}
+
+/* A phone on its side, where that 100% is a trap. Mobile browsers keep a
+   layout viewport that spans the area behind their toolbars, so html and body
+   at 100% resolve taller than the shell's 100dvh, which is the height actually
+   visible. The difference is a strip of empty page under the shell that the
+   document can scroll down to, taking the nav off the top of the screen.
+
+   Letting the boxes wrap their content keeps them exactly in step with the
+   shell however the toolbars come and go. */
+@media (orientation: landscape) and (max-height: 520px) {
+  html, body { height: auto; }
 }
 
 /* Section pick flash: the nav can select a service without a page load. */

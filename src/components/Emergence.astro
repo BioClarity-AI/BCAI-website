@@ -152,6 +152,23 @@ const attr = (value: number | boolean | undefined) =>
       font-size: 22px;
     }
   }
+
+  /* A phone held sideways: keep the overlay off the simulation it labels. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .overlay {
+      top: 10px;
+      left: 14px;
+    }
+    .kicker {
+      display: none;
+    }
+    .readout {
+      font-size: 16px;
+    }
+    .controls {
+      margin-top: 6px;
+    }
+  }
 </style>
 
 <script>

@@ -117,4 +117,28 @@ const { kicker, initial, noun } = Astro.props;
     background: transparent;
     border: 1px solid currentColor;
   }
+
+  /* On a phone held sideways the panel is barely 300px tall, and the drawing
+     box has a floor it will not go below — so an overlay at full size ends up
+     printed over the scene. Shed the kicker and shrink the readout instead:
+     the scene keeps its room and nothing overlaps. */
+  @media (orientation: landscape) and (max-height: 520px) {
+    .overlay {
+      top: 10px;
+      left: 14px;
+      right: 14px;
+    }
+
+    .kicker {
+      display: none;
+    }
+
+    .readout {
+      font-size: 16px;
+    }
+
+    .controls {
+      margin-top: 6px;
+    }
+  }
 </style>
