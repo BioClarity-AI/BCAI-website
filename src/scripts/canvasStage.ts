@@ -185,12 +185,26 @@ export function createStage(
       if (!layout) return;
       stage.x0 = stage.tight ? layout.gutter[1] : layout.gutter[0];
       stage.x1 = w - (stage.tight ? layout.inset[1] : layout.inset[0]);
-      stage.y1 = h - layout.bottom;
-      // On short panels the overlay can eat the whole stage — keep a floor.
-      stage.y0 = Math.min(
-        28 + (overlay ? overlay.offsetHeight : 104) + layout.topGap,
-        Math.max(96, stage.y1 - 150),
-      );
+
+      // A phone held sideways leaves the panel about 250px tall. The reserves
+      // above and below are sized for a desktop panel — held at full size they
+      // consume the whole box and the scenes draw on top of each other, so
+      // they shrink with the room available.
+      const short = h < 420;
+      const bottom = short ? Math.max(38, layout.bottom * 0.45) : layout.bottom;
+      stage.y1 = h - bottom;
+
+      const overlayBottom = (short ? 10 : 28) + (overlay ? overlay.offsetHeight : 104);
+      // 34, not the gap itself: the scenes caption the box from 22px above its
+      // top edge, so the box has to start clear of the overlay by that plus
+      // the height of the caption.
+      const clear = overlayBottom + (short ? 34 : layout.topGap);
+      // On a roomy panel the second term caps how far down the box may start,
+      // so a tall overlay cannot eat the whole stage. That cap is wrong when
+      // short: it lands above the overlay, and the scenes label their own top
+      // edge, so they print into the readout. There the overlay wins and the
+      // box takes what is left — which the scenes are built to handle.
+      stage.y0 = short ? clear : Math.min(clear, Math.max(96, stage.y1 - 150));
       stage.mid = (stage.y0 + stage.y1) / 2;
     },
     destroy() {

@@ -150,14 +150,6 @@ export function initScenePanel(root: HTMLElement, config: ScenePanelConfig): Sce
     ctx.globalAlpha = Math.max(0.02, alpha);
     scenes[idx]!.draw(dt, stage);
     ctx.restore();
-
-    // Scene ticks, bottom right.
-    scenes.forEach((_, i) => {
-      ctx.fillStyle = i === idx ? stage.acc : stage.dim;
-      ctx.globalAlpha = i === idx ? 1 : 0.4;
-      ctx.fillRect(stage.x1 - (scenes.length - i) * 16, stage.h - 40, 10, 3);
-      ctx.globalAlpha = 1;
-    });
   });
 
   const onPrev = () => nav(-1);

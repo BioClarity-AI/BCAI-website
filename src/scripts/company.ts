@@ -89,20 +89,35 @@ export function initCompany(root: HTMLElement): CompanyHandle {
 
     ctx.clearRect(0, 0, s.w, s.h);
     const tight = s.w < 560;
+    // A phone held sideways: the panel is ~250px tall, where placing the
+    // tracks at fixed fractions of the height puts the top one's callouts
+    // straight through the heading.
+    const short = s.h < 430;
     const x0 = tight ? 26 : 52;
     const x1 = s.w - (tight ? 26 : 52);
-    const yA = s.h * 0.34;
-    const yB = s.h * 0.62;
     const gx = (i: number) => x0 + 80 + (x1 - x0 - 110) * (i / (GATES.length - 1));
-    const ms = tight ? 7 : 9;
+    const ms = short ? 6 : tight ? 7 : 9;
     const availW = x1 - x0;
+
+    // Vertical layout. Each track hangs a label 34px above itself and, on the
+    // top one, a callout 59px above that again; the close card wants the foot
+    // of the panel. With room the tracks sit at the authored fractions; when
+    // short they are packed against what there is, and the card is dropped
+    // rather than printed over the gates.
+    const headY = short ? 20 : tight ? 54 : 66;
+    const showClose = s.h >= 300;
+    const closeY = s.h - (short ? 40 : tight ? 96 : 108);
+    // 78 = the 59 the flaw callout hangs above the track, plus the height of
+    // the heading it must clear.
+    const yA = short ? headY + 78 : s.h * 0.34;
+    const yB = short ? Math.max(yA + 58, showClose ? closeY - 52 : s.h - 34) : s.h * 0.62;
 
     // Fit to width: shrink or shorten anything that would overflow the panel.
     let head = 'ONE HIDDEN FLAW. TWO WAYS TO FIND IT.';
-    let headFs = 11;
+    let headFs = short ? 9 : 11;
     if (s.mText(head, headFs, 800, '0.16em') > availW) head = 'ONE FLAW. TWO WAYS TO FIND IT.';
     while (headFs > 8 && s.mText(head, headFs, 800, '0.16em') > availW) headFs -= 0.5;
-    s.txt(head, x0, tight ? 54 : 66, headFs, s.dim, 800, '0.16em');
+    s.txt(head, x0, headY, headFs, s.dim, 800, '0.16em');
 
     // Three things share the row above each track: the track's own label on the
     // left, the burn meter on the right, and — on the top track only — the seam
@@ -239,9 +254,9 @@ export function initCompany(root: HTMLElement): CompanyHandle {
     }
 
     // ── The close: same flaw, different bill → request access.
-    if (t > T.card) {
+    if (t > T.card && showClose) {
       const p = s.ease(s.clamp01((t - T.card) / 0.5));
-      const cy = s.h - (tight ? 96 : 108);
+      const cy = closeY;
       ctx.save();
       ctx.globalAlpha = p;
 

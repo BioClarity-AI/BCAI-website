@@ -102,18 +102,30 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
 
     ctx.clearRect(0, 0, s.w, s.h);
     const tight = s.w < 520;
+    // A phone held sideways: the panel is ~250px tall, where a gate standing
+    // 90px off a mid-line placed at 48% of the height runs its label through
+    // the title and its checklist through the caption.
+    const short = s.h < 430;
     const x0 = tight ? 24 : 48;
     const x1 = s.w - (tight ? 24 : 48);
-    const midY = s.h * 0.48;
     const gateX = x0 + (x1 - x0) * 0.44;
     const boxX = x1 - (tight ? 54 : 78);
     const boxW = tight ? 44 : 64;
     const boxH = tight ? 34 : 46;
-    const es = tight ? 15 : 20;
+    const es = short ? 13 : tight ? 15 : 20;
+
+    // The scene lives between the title and the caption. When short it is
+    // centred in that gap and the gate scales to it, rather than standing a
+    // fixed distance off a fraction of the panel height.
+    const titleY = short ? 18 : tight ? 54 : 64;
+    const capY = s.h - (short ? 22 : tight ? 94 : 106);
+    const top = titleY + (short ? 12 : 20);
+    const midY = short ? (top + capY - 24) / 2 : s.h * 0.48;
+    const gateH = short ? Math.max(40, Math.min(90, (capY - 24 - top) / 2 - 20)) : 90;
     /* The rule the whole scene stands on. Everything below it hangs off this. */
     const baselineY = midY + boxH / 2 + 6;
 
-    s.txt('YOUR EMAIL — LIVE SIMULATION', x0, tight ? 54 : 64, 11, s.dim, 800, '0.18em');
+    s.txt('YOUR EMAIL — LIVE SIMULATION', x0, titleY, short ? 9 : 11, s.dim, 800, '0.18em');
 
     // The gate.
     ctx.save();
@@ -121,12 +133,12 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
     ctx.lineWidth = 2;
     ctx.setLineDash([6, 5]);
     ctx.beginPath();
-    ctx.moveTo(gateX, midY - 90);
-    ctx.lineTo(gateX, midY + 90);
+    ctx.moveTo(gateX, midY - gateH);
+    ctx.lineTo(gateX, midY + gateH);
     ctx.stroke();
     ctx.restore();
-    s.ctext('VERY SERIOUS', gateX, midY - 104, 9, s.acc, 800, '0.16em');
-    s.ctext('SCREENING', gateX, midY - 92, 9, s.acc, 800, '0.16em');
+    s.ctext('VERY SERIOUS', gateX, midY - gateH - 14, 9, s.acc, 800, '0.16em');
+    s.ctext('SCREENING', gateX, midY - gateH - 2, 9, s.acc, 800, '0.16em');
 
     // The inbox: an open box with eyes — it has been waiting all day.
     const happy = t > P.eat;
@@ -170,7 +182,7 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
         // Hang the list off the baseline, not the midline: at midY + 34 the
         // first row's glyphs straddled the rule. The extra drop clears the
         // YOU / US captions, which sit on their own row just under it.
-        const y = baselineY + 34 + i * 16;
+        const y = baselineY + (short ? 24 : 34) + i * (short ? 13 : 16);
         s.txt(c, gateX + 12, y, 9, s.dim, 800, '0.12em');
         if (done > i + 0.7 || i < k) {
           const answer = i === 2 ? 'NO' : 'YES';
@@ -261,7 +273,7 @@ export function initRequestAccess(root: HTMLElement): RequestAccessHandle {
     // Baseline + caption.
     s.line(x0, baselineY, x1, baselineY, s.ink, 2);
     const capFs = s.mText(caption, 12, 800, '0.14em') < x1 - x0 ? 12 : 10;
-    s.txt(caption, x0, s.h - (tight ? 94 : 106), capFs, s.ink, 800, '0.14em');
+    s.txt(caption, x0, capY, capFs, s.ink, 800, '0.14em');
   });
 
   return {

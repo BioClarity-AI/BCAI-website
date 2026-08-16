@@ -627,7 +627,12 @@ function foundationScene(): Scene {
       const sx1 = s.x1;
       const sw = sx1 - sx0;
       const bottom = s.y1 - 18;
-      const basinTop = s.y0 + (s.y1 - s.y0) * 0.44;
+      // A phone held sideways: the inlets normally hang above the box, which
+      // there puts them under the overlay, and the strata are left a few
+      // pixels to share. Bring the inlets inside and start the basin higher.
+      const short = s.h < 420;
+      const inletY = short ? s.y0 + 14 : s.y0 - 31;
+      const basinTop = short ? s.y0 + 42 : s.y0 + (s.y1 - s.y0) * 0.44;
       const H = Math.max(40, bottom - basinTop);
 
       // Strata thicken by slow creep, never by a step — a landing must not
@@ -655,21 +660,22 @@ function foundationScene(): Scene {
 
       // Inlets.
       const slotW = colSpan / INLETS.length;
-      const showNames = INLETS.every(([n]) => s.mText(n, 9, 800, '0.1em') < slotW - 6);
+      // Their names need a row of their own, which a short panel has not got.
+      const showNames = !short && INLETS.every(([n]) => s.mText(n, 9, 800, '0.1em') < slotW - 6);
       INLETS.forEach(([name, hot, kind], i) => {
         const x = colX(i);
         const col = hot ? s.acc : s.dim;
-        glyph(s, kind, x, s.y0 - 31, kind === 'session' ? 11 : 10, col, hot ? 2 : 1.5);
+        glyph(s, kind, x, inletY, kind === 'session' ? 11 : 10, col, hot ? 2 : 1.5);
         if (hot) {
           ctx.save();
           ctx.strokeStyle = s.acc;
           ctx.lineWidth = 1.5;
-          ctx.strokeRect(x - 14, s.y0 - 45, 28, 28);
+          ctx.strokeRect(x - 14, inletY - 14, 28, 28);
           ctx.restore();
         }
-        if (showNames) s.ctext(name, x, s.y0 - 8, 9, col, 800, '0.1em');
+        if (showNames) s.ctext(name, x, inletY + 23, 9, col, 800, '0.1em');
         if (t > next[i]!) {
-          drops.push({ i, x: x + (Math.random() - 0.5) * 12, y: s.y0, v: 8 + Math.random() * 12 });
+          drops.push({ i, x: x + (Math.random() - 0.5) * 12, y: inletY + 16, v: 8 + Math.random() * 12 });
           next[i] = t + 1.1 + Math.random() * 1.4;
         }
       });
@@ -733,7 +739,10 @@ function foundationScene(): Scene {
         ctx.restore();
         // Gate on fit, not viewport class — the bands span the whole panel.
         const name = BANDS[i]!;
-        if (s.mText(name, 9, 800, '0.14em') < sw - 24) {
+        // Thin bands push their label outside, and five of those stack into an
+        // unreadable pile. On a short panel only the accent band — the point of
+        // the scene — keeps its label.
+        if ((!short || hot) && s.mText(name, 9, 800, '0.14em') < sw - 24) {
           const inside = bth > 15;
           const on = inside ? s.n100 : hot ? s.acc : s.dim;
           const ly = inside ? y + bth / 2 + 3 : y - 5;
@@ -791,7 +800,10 @@ function foundationScene(): Scene {
       const cellH = Math.max(24, 38 * cScale);
       const pad = Math.max(6, 12 * cScale);
       const cellX = sx0;
-      const cellY = Math.max(s.y0 - 4, basinTop - cellH - 46);
+      // Normally the cell sits above the basin. On a short panel the basin
+      // starts too high for that, so it moves to the empty ground left of the
+      // inlet columns, on their row — the riser reaches the basin either way.
+      const cellY = short ? Math.max(s.y0, inletY - 16) : Math.max(s.y0 - 4, basinTop - cellH - 46);
       ctx.save();
       ctx.strokeStyle = s.acc;
       ctx.lineWidth = 2;
@@ -826,11 +838,14 @@ function foundationScene(): Scene {
       const col = ci === 1 ? s.acc : s.ink;
       // Wrap to two lines when the single line would run past the panel.
       const one = caption.join(' ');
-      if (s.mText(one, 12, 800, '0.14em') < sx1 - s.x0) {
-        s.txt(one, s.x0, bottom + 34, 12, col, 800, '0.14em');
+      // Short panels have no room to spend below the basin: the two-line form
+      // sits closer in, or its second line runs off the bottom edge.
+      const capFs = short ? 10 : 12;
+      if (s.mText(one, capFs, 800, '0.14em') < sx1 - s.x0) {
+        s.txt(one, s.x0, bottom + (short ? 26 : 34), capFs, col, 800, '0.14em');
       } else {
-        s.txt(caption[0], s.x0, bottom + 30, 12, col, 800, '0.14em');
-        s.txt(caption[1], s.x0, bottom + 48, 12, col, 800, '0.14em');
+        s.txt(caption[0], s.x0, bottom + (short ? 22 : 30), capFs, col, 800, '0.14em');
+        s.txt(caption[1], s.x0, bottom + (short ? 37 : 48), capFs, col, 800, '0.14em');
       }
     },
   };
