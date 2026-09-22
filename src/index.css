@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* BioClarity AI - Therapeutic Scientific Design System */
+/* Dark charcoal backgrounds with electric blue and neon teal accents */
+
+@layer base {
+  :root {
+    /* BioClarity AI Brand Colors */
+    --charcoal: 210 15% 8%;           /* Dark charcoal background */
+    --charcoal-light: 210 12% 12%;    /* Lighter charcoal for cards */
+    --electric-blue: 200 100% 50%;    /* Electric blue accent */
+    --neon-teal: 180 100% 50%;        /* Neon teal accent */
+    --electric-blue-glow: 200 100% 60%; /* Glowing blue */
+    --neon-teal-glow: 180 100% 60%;   /* Glowing teal */
+    
+    /* Core System Colors */
+    --background: 210 15% 8%;         /* Dark charcoal */
+    --foreground: 0 0% 98%;           /* Near white text */
+    
+    --card: 210 12% 12%;              /* Charcoal cards */
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 210 12% 12%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 200 100% 50%;          /* Electric blue */
+    --primary-foreground: 0 0% 98%;
+    
+    --secondary: 180 100% 50%;        /* Neon teal */
+    --secondary-foreground: 210 15% 8%;
+    
+    --muted: 210 10% 20%;
+    --muted-foreground: 0 0% 70%;
+    
+    --accent: 200 100% 50%;           /* Electric blue accent */
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 210 10% 20%;
+    --input: 210 10% 20%;
+    --ring: 200 100% 50%;
+    
+    --radius: 0.5rem;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(200 100% 50%), hsl(180 100% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(210 15% 8%) 0%, hsl(210 12% 12%) 50%, hsl(200 100% 10%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(210 12% 12%), hsl(210 10% 15%));
+    
+    /* Shadows */
+    --shadow-electric: 0 0 30px hsl(200 100% 50% / 0.3);
+    --shadow-teal: 0 0 30px hsl(180 100% 50% / 0.3);
+    --shadow-elegant: 0 10px 40px -10px hsl(210 15% 5% / 0.8);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dark {
+    /* Same as root for dark-first design */
+    --background: 210 15% 8%;
+    --foreground: 0 0% 98%;
+    --card: 210 12% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 210 12% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 200 100% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 210 15% 8%;
+    --muted: 210 10% 20%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 200 100% 50%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 10% 20%;
+    --input: 210 10% 20%;
+    --ring: 200 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    background: var(--gradient-hero);
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--charcoal));
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--electric-blue) / 0.5);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--electric-blue) / 0.8);
+  }
+}
+
+@layer components {
+  /* Hero gradient text */
+  .gradient-text {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Glowing effects */
+  .glow-electric {
+    box-shadow: var(--shadow-electric);
+  }
+  
+  .glow-teal {
+    box-shadow: var(--shadow-teal);
+  }
+  
+  /* Card with gradient background */
+  .card-gradient {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--electric-blue) / 0.2);
+  }
+  
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  /* Bento grid layout */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+  
+  /* Scientific data visualization styles */
+  .data-viz {
+    background: linear-gradient(145deg, hsl(var(--charcoal-light)), hsl(var(--charcoal)));
+    border: 1px solid hsl(var(--electric-blue) / 0.3);
+  }
+}
